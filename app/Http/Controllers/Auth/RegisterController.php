@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
@@ -52,8 +53,12 @@ class RegisterController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'no_hp' => ['nullable', 'string', 'max:20'],
+            'jenis_kelamin' => ['nullable', 'in:Laki-laki,Perempuan'],
+            'tgl_lahir' => ['nullable', 'date'],
         ]);
     }
+
 
     /**
      * Create a new user instance after a valid registration.
@@ -63,10 +68,21 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
-        return User::create([
+        $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'role' => 'customer',
         ]);
+
+        Customer::create([
+            'user_id' => $user->id,
+            'no_hp' => $data['no_hp'] ?? null,
+            'jenis_kelamin' => $data['jenis_kelamin'] ?? null,
+            'tgl_lahir' => $data['tgl_lahir'] ?? null,
+        ]);
+
+        return $user;
     }
+
 }
