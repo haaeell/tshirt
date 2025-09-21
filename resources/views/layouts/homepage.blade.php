@@ -1,42 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title','Toko Delapan')</title>
+    <title>@yield('title', 'Toko Delapan')</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     @stack('styles')
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ url('/') }}">TOKO DELAPAN</a>
+            <a class="navbar-brand fw-bold" href="{{ route('home') }}">TOKO DELAPAN</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="{{ url('/') }}">Home</a></li>
-                    <li class="nav-item"><a class="nav-link {{ request()->is('tentang') ? 'active' : '' }}" href="{{ url('/tentang') }}">Tentang Kami</a></li>
-                    <li class="nav-item"><a class="nav-link {{ request()->is('produk*') ? 'active' : '' }}" href="{{ url('/produk') }}">Produk</a></li>
-                    <li class="nav-item"><a class="nav-link {{ request()->is('kontak') ? 'active' : '' }}" href="{{ url('/kontak') }}">Kontak</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}"
+                            href="{{ route('home') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('tentang') ? 'active' : '' }}"
+                            href="{{ url('/tentang') }}">Tentang Kami</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('users.produk.*') ? 'active' : '' }}"
+                            href="{{ route('users.produk.index') }}">Produk</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->is('kontak') ? 'active' : '' }}"
+                            href="{{ url('/kontak') }}">Kontak</a>
+                    </li>
 
                     @guest
-                        <li class="nav-item"><a class="btn btn-primary btn-sm ms-2" href="{{ route('login') }}">Login</a></li>
+                        <li class="nav-item">
+                            <a class="btn btn-primary btn-sm ms-2" href="{{ route('login') }}">Login</a>
+                        </li>
                     @else
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarUser" role="button" data-bs-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarUser" role="button"
+                                data-bs-toggle="dropdown">
                                 {{ Auth::user()->name }}
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{{ url('/keranjang') }}">Keranjang</a></li>
-                                <li><a class="dropdown-item" href="{{ url('/pesanan') }}">Pesanan Saya</a></li>
-                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ route('users.cart.index') }}">Keranjang</a></li>
+                                <li><a class="dropdown-item" href="{{ route('users.orders.index') }}">Pesanan Saya</a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
                                 <li>
                                     <a class="dropdown-item" href="{{ route('logout') }}"
-                                       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                         Logout
                                     </a>
                                     <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
@@ -79,4 +98,5 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')
 </body>
+
 </html>

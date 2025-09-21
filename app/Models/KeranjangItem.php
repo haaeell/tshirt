@@ -11,8 +11,14 @@ class KeranjangItem extends Model
 
     protected $table = 'keranjang_item';
     protected $fillable = [
-        'keranjang_id','produk_id','produk_varian_id',
-        'qty','harga_satuan','subtotal','pakai_sablon','detail_sablon'
+        'keranjang_id',
+        'produk_id',
+        'produk_varian_id',
+        'qty',
+        'harga_satuan',
+        'subtotal',
+        'pakai_sablon',
+        'detail_sablon'
     ];
 
     protected $casts = [
@@ -30,7 +36,7 @@ class KeranjangItem extends Model
         return $this->belongsTo(Produk::class);
     }
 
-    public function varian()
+    public function produkVarian()
     {
         return $this->belongsTo(ProdukVarian::class, 'produk_varian_id');
     }
