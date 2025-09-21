@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Material;
+use App\Models\PosisiSablon;
 use App\Models\Produk;
 use Illuminate\Http\Request;
 
@@ -16,6 +18,8 @@ class ProductController extends Controller
     public function show($id)
     {
         $produk = Produk::with('varian')->findOrFail($id);
-        return view('users.produk.show', compact('produk'));
+        $posisiSablon = PosisiSablon::all();
+        $materials = Material::all();
+        return view('users.produk.show', compact('produk','posisiSablon','materials'));
     }
 }

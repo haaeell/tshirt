@@ -21,7 +21,7 @@ Auth::routes();
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 # ADMIN ROUTES
-Route::prefix('admin')->middleware(['auth', 'can:admin'])->group(function () {
+Route::prefix('admin')->middleware('auth')->group(function () {
     Route::get('users', [AdminController::class, 'index'])->name('admin.users.index');
     Route::post('users', [AdminController::class, 'store'])->name('admin.users.store');
     Route::put('users/{user}', [AdminController::class, 'update'])->name('admin.users.update');
