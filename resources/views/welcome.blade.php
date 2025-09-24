@@ -1,76 +1,58 @@
 @extends('layouts.homepage')
 
 @section('content')
-
     <!-- Hero Section -->
-    <section class="py-5 bg-light text-center">
+    <section class="py-5 text-white text-center d-flex align-items-center"
+        style="min-height: 60vh; border-radius:16px;
+                background: linear-gradient(135deg, #0d47a1 0%, #000428 100%);">
         <div class="container">
-            <h1 class="fw-bold">TOKO DELAPAN</h1>
-            <p class="lead">Layanan sablon kaos, printing, dan produk kreatif lainnya. Cepat, murah, dan berkualitas!
+            <h1 class="fw-bold display-4 mb-3">TOKO DELAPAN</h1>
+            <p class="lead mb-4">Layanan sablon kaos, printing, dan produk kreatif lainnya. Cepat, murah, dan berkualitas!
             </p>
-            <a href="#" class="btn btn-primary">Booking Sekarang</a>
+            <a href="#" class="btn btn-light btn-lg px-4 rounded-pill shadow-sm">Booking Sekarang</a>
         </div>
     </section>
 
+
     <!-- Profil Kami -->
-    <section class="py-5">
-        <div class="container text-center">
-            <div class="row d-flex justify-content-center">
-                <div class="col-8">
-                   <div class="mb-5">
-                     <h2 class="mb-3">Profil Kami</h2>
-                    <p class="mb-4">Kami adalah penyedia layanan sablon profesional dengan berbagai pilihan produk.
-                        Temukan layanan terbaik untuk kebutuhan Anda. Kami adalah penyedia layanan sablon profesional
-                        dengan berbagai pilihan produk</p>
-                   </div>
-                    <ul class="nav nav-pills justify-content-center mb-4">
-                        <li class="nav-item"><a class="nav-link active" href="#">Semua</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#">Promo</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#">E-Sport</a></li>
-                    </ul>
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row justify-content-center text-center mb-5">
+                <div class="col-lg-8">
+                    <h2 class="fw-bold mb-3">Profil Kami</h2>
+                    <p class="text-muted">
+                        Toko Delapan adalah penyedia layanan sablon dan printing profesional yang berfokus pada kualitas
+                        hasil
+                        dan kepuasan pelanggan. Dengan pengalaman bertahun-tahun di bidang percetakan, kami menghadirkan
+                        beragam pilihan produk mulai dari sablon kaos, jersey, merchandise komunitas, hingga kebutuhan
+                        promosi bisnis Anda.
+                    </p>
+                    <p class="text-muted">
+                        Kami percaya bahwa setiap karya memiliki cerita, dan melalui layanan kami, cerita tersebut bisa
+                        diwujudkan dalam bentuk desain yang menarik dan produk yang tahan lama. Proses produksi dilakukan
+                        dengan teknologi modern, tinta berkualitas, serta tim berpengalaman yang memastikan hasil terbaik
+                        untuk setiap pesanan.
+                    </p>
                 </div>
             </div>
 
             <!-- Produk Cards -->
             <div class="row g-4">
-                <div class="col-md-3">
-                    <div class="card shadow-sm">
-                        <img src="https://placehold.co/600x400" class="card-img-top" alt="Produk">
-                        <div class="card-body">
-                            <h5 class="card-title">Produk 1</h5>
-                            <p class="card-text">Rp 50.000</p>
+                @foreach ([['nama' => 'Produk 1', 'harga' => '50.000'], ['nama' => 'Produk 2', 'harga' => '75.000'], ['nama' => 'Produk 3', 'harga' => '100.000'], ['nama' => 'Produk 4', 'harga' => '120.000']] as $produk)
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card h-100 border-0 shadow-sm rounded-3">
+                            <img src="https://placehold.co/600x400" class="card-img-top rounded-top"
+                                alt="{{ $produk['nama'] }}">
+                            <div class="card-body text-center">
+                                <h6 class="fw-bold mb-1">{{ $produk['nama'] }}</h6>
+                                <p class="text-primary fw-semibold mb-3">Rp {{ $produk['harga'] }}</p>
+                                <a href="#" class="btn btn-sm btn-primary rounded-pill px-3">Detail</a>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card shadow-sm">
-                        <img src="https://placehold.co/600x400" class="card-img-top" alt="Produk">
-                        <div class="card-body">
-                            <h5 class="card-title">Produk 2</h5>
-                            <p class="card-text">Rp 75.000</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card shadow-sm">
-                        <img src="https://placehold.co/600x400" class="card-img-top" alt="Produk">
-                        <div class="card-body">
-                            <h5 class="card-title">Produk 3</h5>
-                            <p class="card-text">Rp 100.000</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card shadow-sm">
-                        <img src="https://placehold.co/600x400" class="card-img-top" alt="Produk">
-                        <div class="card-body">
-                            <h5 class="card-title">Produk 4</h5>
-                            <p class="card-text">Rp 120.000</p>
-                        </div>
-                    </div>
-                </div>
+                @endforeach
             </div>
+
         </div>
     </section>
-
 @endsection

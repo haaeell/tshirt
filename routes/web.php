@@ -51,6 +51,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('pesanan', [OrderController::class, 'index'])->name('users.orders.index');
     Route::get('pesanan/{id}', [OrderController::class, 'show'])->name('users.orders.show');
 
+    Route::post('voucher/check', [OrderController::class, 'checkVoucher'])->name('users.checkVoucher');
+
     # pembayaran
     Route::post('pesanan/{id}/upload-bukti', [OrderController::class, 'uploadBukti'])->name('users.orders.uploadBukti');
 });

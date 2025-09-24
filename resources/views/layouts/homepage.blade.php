@@ -7,6 +7,8 @@
     <title>@yield('title', 'Toko Delapan')</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+
     <style>
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -84,7 +86,7 @@
                 <ul class="navbar-nav ms-auto align-items-lg-center">
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}"
-                            href="{{ route('home') }}">Home</a>
+                            href="/">Home</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->is('tentang') ? 'active' : '' }}"
@@ -146,7 +148,7 @@
                 </div>
                 <div class="col-md-6 text-center">
                     <h5>Map</h5>
-                    <img src="https://placehold.co/600x400" class="img-fluid rounded shadow-sm" alt="Map">
+                    <img src="https://placehold.co/300x200" class="img-fluid rounded shadow-sm" alt="Map">
                 </div>
             </div>
             <div class="text-center mt-4 small text-muted">
