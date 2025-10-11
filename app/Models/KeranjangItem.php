@@ -3,41 +3,24 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class KeranjangItem extends Model
 {
-    use HasFactory;
-
     protected $table = 'keranjang_item';
-    protected $fillable = [
-        'keranjang_id',
-        'produk_id',
-        'produk_varian_id',
-        'qty',
-        'harga_satuan',
-        'subtotal',
-        'pakai_sablon',
-        'detail_sablon'
-    ];
-
-    protected $casts = [
-        'detail_sablon' => 'array',
-        'pakai_sablon' => 'boolean',
-    ];
+    protected $fillable = ['keranjang_id', 'produk_id', 'warna', 'bahan', 'lengan', 'subtotal'];
 
     public function keranjang()
     {
-        return $this->belongsTo(Keranjang::class);
+        return $this->belongsTo(Keranjang::class, 'keranjang_id');
     }
 
     public function produk()
     {
-        return $this->belongsTo(Produk::class);
+        return $this->belongsTo(Produk::class, 'produk_id');
     }
 
-    public function produkVarian()
+    public function details()
     {
-        return $this->belongsTo(ProdukVarian::class, 'produk_varian_id');
+        return $this->hasMany(KeranjangItemDetail::class, 'keranjang_item_id');
     }
 }

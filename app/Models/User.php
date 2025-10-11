@@ -10,26 +10,26 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected $fillable = [
-        'name','email','password','role',
-    ];
-
-    protected $hidden = [
-        'password','remember_token',
-    ];
+    protected $fillable = ['nama', 'email', 'password', 'role'];
+    protected $hidden = ['password', 'remember_token'];
 
     public function customer()
     {
         return $this->hasOne(Customer::class);
     }
 
-    public function alamat()
+    public function keranjang()
     {
-        return $this->hasMany(AlamatUser::class);
+        return $this->hasOne(Keranjang::class);
     }
 
     public function pesanan()
     {
         return $this->hasMany(Pesanan::class);
+    }
+
+    public function ulasan()
+    {
+        return $this->hasMany(UlasanProduk::class);
     }
 }

@@ -10,24 +10,36 @@ class PesananItem extends Model
     use HasFactory;
 
     protected $table = 'pesanan_item';
-    protected $fillable = [
-        'pesanan_id','produk_id','produk_varian_id',
-        'nama_produk','warna','ukuran','lengan','bahan',
-        'pakai_sablon','detail_sablon','qty','harga_satuan','subtotal'
-    ];
-
-    protected $casts = [
-        'detail_sablon' => 'array',
-        'pakai_sablon' => 'boolean',
-    ];
+    protected $fillable = ['pesanan_id', 'produk_id', 'warna', 'lengan', 'sablon_id', 'bahan', 'subtotal'];
 
     public function pesanan()
     {
         return $this->belongsTo(Pesanan::class);
     }
 
+    public function details()
+    {
+        return $this->hasMany(PesananItemDetail::class);
+    }
+
     public function produk()
     {
         return $this->belongsTo(Produk::class);
+    }
+
+
+    public function sablon()
+    {
+        return $this->belongsTo(Sablon::class);
+    }
+
+    public function detail()
+    {
+        return $this->hasMany(PesananItemDetail::class);
+    }
+
+    public function customSablon()
+    {
+        return $this->hasMany(CustomSablon::class);
     }
 }

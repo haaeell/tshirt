@@ -19,7 +19,7 @@
                     <!-- Isi Card -->
                     <div class="card-body d-flex flex-column text-center">
                         <h6 class="fw-semibold mb-1">{{ $p->nama }}</h6>
-                        <p class="text-muted small mb-2">{{ Str::limit($p->deskripsi, 60) }}</p>
+                        <p class="text-muted small mb-2">{{ Str::limit($p->jenis_produk, 60) }}</p>
                         <p class="fw-bold text-primary mb-3">Rp {{ number_format($p->harga, 0, ',', '.') }}</p>
 
                         <!-- Tombol -->
