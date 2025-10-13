@@ -83,12 +83,6 @@ class DatabaseSeeder extends Seeder
             ['produk_id' => $kaosId, 'nama' => 'Cotton Bamboo', 'tambahan_harga' => 15000, 'created_at' => $now, 'updated_at' => $now],
         ]);
 
-        DB::table('sablon')->insert([
-            ['jenis' => 'DTF', 'ukuran' => 'kecil', 'tambahan_harga' => 10000, 'created_at' => $now, 'updated_at' => $now],
-            ['jenis' => 'DTF', 'ukuran' => 'besar', 'tambahan_harga' => 20000, 'created_at' => $now, 'updated_at' => $now],
-            ['jenis' => 'Polyflex', 'ukuran' => 'kecil', 'tambahan_harga' => 8000, 'created_at' => $now, 'updated_at' => $now],
-        ]);
-
         DB::table('mockup')->insert([
             ['produk_id' => $kaosId, 'angle' => 'depan', 'file_path' => 'mockup/kaos-depan.png', 'created_at' => $now, 'updated_at' => $now],
             ['produk_id' => $kaosId, 'angle' => 'belakang', 'file_path' => 'mockup/kaos-belakang.png', 'created_at' => $now, 'updated_at' => $now],

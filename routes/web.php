@@ -71,7 +71,6 @@ Route::prefix('admin')->middleware('auth')->group(function () {
         Route::put('varian/mockup/{mockup}', [ProdukVarianController::class, 'updateMockup'])->name('varian.mockup.update');
         Route::delete('varian/mockup/{mockup}', [ProdukVarianController::class, 'destroyMockup'])->name('varian.mockup.destroy');
     });
-
 });
 
 # USER ROUTES
@@ -99,4 +98,6 @@ Route::middleware(['auth'])->group(function () {
 
     # pembayaran
     Route::post('pesanan/{id}/upload-bukti', [OrderController::class, 'uploadBukti'])->name('users.orders.uploadBukti');
+    Route::post('pesanan/{id}/status', [OrderController::class, 'updateStatus'])->name('users.orders.updateStatus');
+    Route::post('pesanan/{id}/review-produk', [OrderController::class, 'reviewProduk'])->name('users.orders.reviewProduk');
 });

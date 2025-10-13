@@ -7,7 +7,7 @@
     <ul class="nav flex-column">
         <!-- Dashboard -->
         <li class="nav-item">
-            <a class="nav-link" href="/admin/dashboard">
+            <a class="nav-link" href="/home">
                 <i class="fas fa-tachometer-alt menu-icon"></i>
                 <span class="menu-title">Dashboard</span>
             </a>

@@ -187,43 +187,126 @@
                 <i class="fas fa-shopping-bag me-2 text-primary"></i> Produk Dipesan
             </div>
             <div class="card-body p-3">
-                <div class="table-responsive">
-                    <table class="table align-middle table-hover">
-                        <thead class="table-light">
+                <div class="table-responsive mt-3">
+                    <table class="table table-borderless align-middle table-hover shadow-sm">
+                        <thead class="table-light text-secondary small">
                             <tr>
                                 <th>Produk</th>
-                                <th>Varian</th>
-                                <th class="text-center">Qty</th>
-                                <th class="text-end">Harga</th>
-                                <th class="text-end">Subtotal</th>
+                                <th>Bahan</th>
+                                <th>Warna</th>
+                                <th style="width: 45%">Varian</th>
+                                <th class="text-center">Total Qty</th>
+                                <th class="text-end">Total Harga</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($pesanan->items as $item)
-                                @foreach ($item->details as $detail)
-                                    <tr>
-                                        <td>{{ $item->produk->nama ?? '-' }}</td>
-                                        <td>
-                                            <span class="badge bg-light text-dark me-1">Warna:
-                                                {{ $item->warna ?? '-' }}</span>
-                                            <span class="badge bg-light text-dark me-1">Ukuran:
-                                                {{ strtoupper($detail->ukuran ?? '-') }}</span>
-                                            <span class="badge bg-light text-dark me-1">Lengan:
-                                                {{ ucfirst($item->lengan ?? '-') }}</span>
-                                            <span class="badge bg-light text-dark">Bahan: {{ $item->bahan ?? '-' }}</span>
-                                        </td>
-                                        <td class="text-center">{{ $detail->qty }}</td>
-                                        <td class="text-end">Rp {{ number_format($detail->harga_satuan, 0, ',', '.') }}
-                                        </td>
-                                        <td class="text-end fw-semibold">Rp
-                                            {{ number_format($detail->subtotal, 0, ',', '.') }}</td>
-                                    </tr>
-                                @endforeach
+                            @php
+                                $grouped = [];
+
+                                foreach ($pesanan->items as $item) {
+                                    $key = $item->produk_id . '|' . $item->bahan . '|' . $item->warna;
+
+                                    if (!isset($grouped[$key])) {
+                                        $grouped[$key] = [
+                                            'produk' => $item->produk,
+                                            'bahan' => $item->bahan,
+                                            'warna' => $item->warna,
+                                            'details' => [],
+                                        ];
+                                    }
+
+                                    foreach ($item->details as $d) {
+                                        $grouped[$key]['details'][] = [
+                                            'lengan' => $d->lengan,
+                                            'ukuran' => $d->ukuran,
+                                            'qty' => $d->qty,
+                                            'harga_satuan' => $d->harga_satuan,
+                                            'subtotal' => $d->subtotal,
+                                        ];
+                                    }
+                                }
+                            @endphp
+
+                            @foreach ($grouped as $g)
+                                @php
+                                    $totalQty = collect($g['details'])->sum('qty');
+                                    $totalHarga = collect($g['details'])->sum('subtotal');
+                                @endphp
+
+                                <tr class="border-bottom">
+                                    <!-- Produk -->
+                                    <td class="align-middle">
+                                        <div class="d-flex align-items-center">
+                                            <img src="{{ asset('storage/' . ($g['produk']->image ?? 'placeholder.png')) }}"
+                                                class="rounded me-3 shadow-sm border"
+                                                style="width: 60px; height: 60px; object-fit: cover;">
+                                            <div>
+                                                <div class="fw-semibold">{{ $g['produk']->nama }}</div>
+                                                <small
+                                                    class="text-muted">{{ ucfirst($g['produk']->jenis_produk ?? '-') }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- Bahan -->
+                                    <td class="text-center align-middle">
+                                        <span class="badge bg-info bg-opacity-10 text-dark px-3 py-2 rounded-pill">
+                                            {{ $g['bahan'] }}
+                                        </span>
+                                    </td>
+
+                                    <!-- Warna -->
+                                    <td class="text-center align-middle">
+                                        <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
+                                            {{ $g['warna'] }}
+                                        </span>
+                                    </td>
+
+                                    <!-- Varian -->
+                                    <td class="align-middle">
+                                        <div class="table-responsive rounded-3 border bg-light-subtle">
+                                            <table class="table table-sm mb-0 text-center align-middle small">
+                                                <thead class="bg-white fw-semibold">
+                                                    <tr class="text-muted">
+                                                        <th>Lengan</th>
+                                                        <th>Ukuran</th>
+                                                        <th>Qty</th>
+                                                        <th>Harga</th>
+                                                        <th>Subtotal</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach ($g['details'] as $v)
+                                                        <tr>
+                                                            <td>{{ ucfirst($v['lengan']) }}</td>
+                                                            <td>{{ strtoupper($v['ukuran']) }}</td>
+                                                            <td>{{ $v['qty'] }}</td>
+                                                            <td>Rp {{ number_format($v['harga_satuan'], 0, ',', '.') }}
+                                                            </td>
+                                                            <td class="fw-semibold text-primary">
+                                                                Rp {{ number_format($v['subtotal'], 0, ',', '.') }}
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+
+                                    <!-- Total Qty -->
+                                    <td class="text-center fw-semibold align-middle">{{ $totalQty }}</td>
+
+                                    <!-- Total Harga -->
+                                    <td class="text-end fw-bold text-primary align-middle">
+                                        Rp {{ number_format($totalHarga, 0, ',', '.') }}
+                                    </td>
+                                </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 @endsection

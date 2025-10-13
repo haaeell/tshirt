@@ -147,7 +147,7 @@
 
 
     <!-- Profil Kami -->
-    <section class="py-5">
+    <section id="tentang" class="py-5">
         <div class="container text-center fade-in">
             <div class="row justify-content-center mb-4">
                 <div class="col-lg-8">
@@ -156,43 +156,54 @@
                         Temukan layanan terbaik untuk kebutuhan Anda — cepat, tepat, dan kreatif!</p>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <ul class="nav nav-pills justify-content-center mb-5">
-                <li class="nav-item"><a class="nav-link active" href="#">Semua</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Promo</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">E-Sport</a></li>
-            </ul>
+    <section id="produk" class="py-5">
+        <div class="container text-center">
+            <div class="row justify-content-center mb-4">
+                <div class="col-lg-8">
+                    <h2 class="fw-semibold mb-3">Produk Terbaru</h2>
+                    <p class="text-muted">Temukan berbagai jenis produk sablon dan apparel dari Toko Delapan yang
+                        bisa kamu pesan sekarang juga!</p>
+                </div>
+            </div>
 
-            <section class="py-5">
-                <div class="container text-center">
-                    <div class="row justify-content-center mb-4">
-                        <div class="col-lg-8">
-                            <h2 class="fw-semibold mb-3">Produk Terbaru</h2>
-                            <p class="text-muted">Temukan berbagai jenis produk sablon dan apparel dari Toko Delapan yang
-                                bisa kamu pesan sekarang juga!</p>
+            <div class="row g-4 justify-content-center">
+                @forelse ($produk as $p)
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
+                            <div class="overflow-hidden">
+                                <img src="https://placehold.co/400x300" class="card-img-top img-fluid product-img"
+                                    alt="{{ $p->nama }}">
+                            </div>
+
+                            <div class="card-body d-flex flex-column text-center">
+                                <h6 class="fw-semibold mb-1">{{ $p->nama }}</h6>
+                                <p class="text-muted small mb-2">{{ Str::limit($p->jenis_produk, 60) }}</p>
+                                <p class="fw-bold text-primary mb-3">Rp {{ number_format($p->harga, 0, ',', '.') }}
+                                </p>
+
+                                <!-- Tombol -->
+                                <a href="{{ route('users.produk.show', $p->id) }}"
+                                    class="btn btn-primary rounded-pill btn-sm mt-auto">
+                                    <i class="fas fa-eye me-1"></i> Lihat Detail
+                                </a>
+                            </div>
                         </div>
                     </div>
+                @empty
+                    <div class="text-muted">Belum ada produk tersedia.</div>
+                @endforelse
+            </div>
+        </div>
+    </section>
 
-                    <div class="row g-4 justify-content-center">
-                        @forelse ($produk as $item)
-                            <div class="col-md-3 col-sm-6">
-                                <div class="card h-100 shadow-sm">
-                                    <img src="https://placehold.co/600x400?text={{ urlencode($item->nama) }}"
-                                        class="card-img-top" alt="{{ $item->nama }}">
-                                    <div class="card-body">
-                                        <h5 class="card-title">{{ $item->nama }}</h5>
-                                        <p class="card-text">Rp {{ number_format($item->harga, 0, ',', '.') }}</p>
-                                        <a href="{{ route('users.produk.index') }}"
-                                            class="btn btn-outline-primary btn-sm mt-2">Lihat Detail</a>
-                                    </div>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="text-muted">Belum ada produk tersedia.</div>
-                        @endforelse
-                    </div>
-                </div>
-            </section>
+    <section id="kontak" class="py-5">
+        <div class="container text-center">
+            <h2 class="fw-semibold mb-3">Hubungi Kami</h2>
+            <p class="text-muted">📞 +62 812-3456-7890 | 📧 toko8@gmail.com</p>
+            <p>📍 Jl. Merdeka No. 88, Jakarta</p>
         </div>
     </section>
 

@@ -15,7 +15,7 @@
                     </div>
 
                     <!-- Thumbnail Carousel -->
-                    <div class="d-flex overflow-auto gap-2 p-3 border-top bg-light">
+                    <div class="d-flex overflow-auto gap-2 p-3 border-top bg-light rounded-bottom">
                         @foreach ($produk->mockup as $m)
                             <img src="{{ asset('storage/' . $m->file_path) }}" class="mockup-thumb rounded shadow-sm"
                                 style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;"
@@ -40,7 +40,7 @@
                                 data-nama="{{ $w->nama }}" title="{{ $w->nama }}"></div>
                         @endforeach
                     </div>
-                    <input type="hidden" id="warnaHidden" name="warna">
+                    <input type="hidden" id="warnaHiddenInput" name="warna">
                 </div>
 
                 <!-- BAHAN -->
@@ -104,7 +104,7 @@
 
                 <!-- CUSTOM SABLON -->
                 <div class="mb-4">
-                    <button class="btn btn-outline-dark w-100">
+                    <button class="btn btn-outline-dark w-100 rounded-pill shadow-sm">
                         <i class="fas fa-paint-brush me-2"></i> Tambah Custom Sablon
                     </button>
                 </div>
@@ -117,12 +117,14 @@
 
                 <!-- TOMBOL -->
                 <div class="d-flex gap-3">
-                    <form method="POST" action="{{ route('users.cart.store') }}" class="flex-fill">
+                    <form method="POST" action="{{ route('users.cart.store') }}" id="cartForm" class="flex-fill">
                         @csrf
                         <input type="hidden" name="produk_id" value="{{ $produk->id }}">
-                        <input type="hidden" name="warna" id="warnaHiddenInput">
+                        <input type="hidden" name="warna" id="warnaHidden">
                         <input type="hidden" name="bahan" id="bahanHidden">
+                        <input type="hidden" name="lengan" id="lenganHidden">
                         <input type="hidden" name="detail_json" id="detailJson">
+
                         <button type="submit" class="btn btn-primary w-100 rounded-pill shadow-sm">
                             <i class="fas fa-cart-plus me-1"></i> Tambah ke Keranjang
                         </button>
@@ -135,10 +137,12 @@
             </div>
         </div>
     </div>
+
+    {{-- ========== STYLE ========== --}}
     <style>
         .color-option {
-            width: 32px;
-            height: 32px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             border: 2px solid #ddd;
             cursor: pointer;
@@ -158,12 +162,6 @@
             transform: scale(1.05);
         }
 
-        .table th,
-        .table td {
-            vertical-align: middle !important;
-        }
-
-        /* ===== Gambar Produk ===== */
         #mainImage {
             max-width: 100%;
             max-height: 350px;
@@ -180,79 +178,146 @@
             transform: scale(1.05);
             box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
         }
-
-        /* ===== Tampilan mobile ===== */
-        @media (max-width: 768px) {
-            #mainImage {
-                max-height: 300px;
-            }
-        }
     </style>
+@endsection
 
+{{-- ========== SCRIPTS ========== --}}
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const basePrice = {{ $produk->harga }};
 
-    @push('scripts')
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const basePrice = {{ $produk->harga }};
-                const colorOptions = document.querySelectorAll('.color-option');
-                const mockupThumbs = document.querySelectorAll('.mockup-thumb');
-                const mainImage = document.getElementById('mainImage');
-                const bahanSelect = document.getElementById('bahanSelect');
-                const qtyInputs = document.querySelectorAll('.qty-input');
-                const totalHargaEl = document.getElementById('totalHarga');
-                const warnaHidden = document.getElementById('warnaHiddenInput');
-                const bahanHidden = document.getElementById('bahanHidden');
-                const detailJson = document.getElementById('detailJson');
+            const colorOptions = document.querySelectorAll('.color-option');
+            const mockupThumbs = document.querySelectorAll('.mockup-thumb');
+            const mainImage = document.getElementById('mainImage');
+            const bahanSelect = document.getElementById('bahanSelect');
+            const qtyInputs = document.querySelectorAll('.qty-input');
+            const totalHargaEl = document.getElementById('totalHarga');
 
-                // Ganti gambar utama saat klik thumbnail
-                mockupThumbs.forEach(img => {
-                    img.addEventListener('click', () => {
-                        mockupThumbs.forEach(t => t.classList.remove('active'));
-                        img.classList.add('active');
-                        mainImage.src = img.src;
-                    });
+            // pastikan ID sama dengan input form
+            const warnaHidden = document.getElementById('warnaHidden');
+            const bahanHidden = document.getElementById('bahanHidden');
+            const detailJson = document.getElementById('detailJson');
+
+            const cartForm = document.getElementById('cartForm');
+
+            // === Ganti gambar utama saat klik thumbnail ===
+            mockupThumbs.forEach(img => {
+                img.addEventListener('click', () => {
+                    mockupThumbs.forEach(t => t.classList.remove('active'));
+                    img.classList.add('active');
+                    mainImage.src = img.src;
+                });
+            });
+
+            // === Pilih warna ===
+            colorOptions.forEach(el => {
+                el.addEventListener('click', () => {
+                    colorOptions.forEach(c => c.classList.remove('active'));
+                    el.classList.add('active');
+
+                    warnaHidden.value = el.dataset.nama;
+                    console.log('warna terpilih:', warnaHidden.value);
+                });
+            });
+
+            // === Update total harga & simpan detail JSON ===
+            function updateTotal() {
+                const bahanHarga = parseFloat(bahanSelect.selectedOptions[0]?.dataset.harga || 0);
+                let total = 0;
+                let detail = [];
+                let lastLengan = ''; // ✅
+
+                qtyInputs.forEach(input => {
+                    const qty = parseInt(input.value || 0);
+                    const hargaTambahan = parseFloat(input.dataset.harga);
+                    if (qty > 0) {
+                        const harga = basePrice + bahanHarga + hargaTambahan;
+                        const subtotal = harga * qty;
+                        total += subtotal;
+                        detail.push({
+                            ukuran: input.dataset.ukuran,
+                            lengan: input.dataset.lengan,
+                            qty,
+                            harga_satuan: harga,
+                            subtotal
+                        });
+                        lastLengan = input.dataset.lengan; // ✅ simpan lengan terakhir yang dipakai
+                    }
                 });
 
-                // Pilih warna
-                colorOptions.forEach(el => {
-                    el.addEventListener('click', () => {
-                        colorOptions.forEach(c => c.classList.remove('active'));
-                        el.classList.add('active');
-                        warnaHidden.value = el.dataset.nama;
-                    });
+                detailJson.value = JSON.stringify(detail);
+                totalHargaEl.textContent = 'Rp ' + total.toLocaleString('id-ID');
+                bahanHidden.value = bahanSelect.value;
+                document.getElementById('lenganHidden').value = lastLengan; // ✅ update hidden input
+
+                console.log('updateTotal() jalan:', {
+                    bahan: bahanHidden.value,
+                    lengan: lastLengan,
+                    detail_json: detailJson.value
                 });
+            }
 
-                // Update total harga realtime
-                function updateTotal() {
-                    const bahanHarga = parseFloat(bahanSelect.selectedOptions[0]?.dataset.harga || 0);
-                    let total = 0;
-                    let detail = [];
 
-                    qtyInputs.forEach(input => {
-                        const qty = parseInt(input.value || 0);
-                        const hargaTambahan = parseFloat(input.dataset.harga);
-                        if (qty > 0) {
-                            const harga = basePrice + bahanHarga + hargaTambahan;
-                            const subtotal = harga * qty;
-                            total += subtotal;
-                            detail.push({
-                                ukuran: input.dataset.ukuran,
-                                lengan: input.dataset.lengan,
-                                qty,
-                                harga_satuan: harga,
-                                subtotal
-                            });
-                        }
+            bahanSelect.addEventListener('change', updateTotal);
+            qtyInputs.forEach(i => i.addEventListener('input', updateTotal));
+
+            // === Validasi dan sync data sebelum submit ===
+            cartForm.addEventListener('submit', function(e) {
+                updateTotal(); // jalankan updateTotal untuk isi semua input
+
+                if (!warnaHidden.value) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Pilih Warna!',
+                        text: 'Silakan pilih warna produk terlebih dahulu.',
+                        confirmButtonColor: '#0d6efd'
                     });
-
-                    detailJson.value = JSON.stringify(detail);
-                    totalHargaEl.textContent = 'Rp ' + total.toLocaleString('id-ID');
-                    bahanHidden.value = bahanSelect.value;
+                    return;
                 }
 
-                bahanSelect.addEventListener('change', updateTotal);
-                qtyInputs.forEach(i => i.addEventListener('input', updateTotal));
+                if (!bahanSelect.value) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Pilih Bahan!',
+                        text: 'Silakan pilih bahan sebelum melanjutkan.',
+                        confirmButtonColor: '#0d6efd'
+                    });
+                    return;
+                }
+
+                const detail = JSON.parse(detailJson.value || '[]');
+                if (detail.length === 0) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Belum Ada Ukuran!',
+                        text: 'Masukkan jumlah minimal 1 pada ukuran tertentu.',
+                        confirmButtonColor: '#0d6efd'
+                    });
+                    return;
+                }
+
+                // log buat debug di console
+                console.log('=== Data akan dikirim ===', {
+                    warna: warnaHidden.value,
+                    bahan: bahanHidden.value,
+                    detail_json: detailJson.value
+                });
             });
-        </script>
-    @endpush
-@endsection
+
+            // === Tampilkan error Laravel ===
+            @if ($errors->any())
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    html: `{!! implode('<br>', $errors->all()) !!}`,
+                    confirmButtonColor: '#0d6efd'
+                });
+            @endif
+        });
+    </script>
+@endpush

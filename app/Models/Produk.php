@@ -41,4 +41,9 @@ class Produk extends Model
     {
         return $this->hasMany(Sablon::class);
     }
+
+    public function ulasan()
+    {
+        return $this->hasMany(UlasanProduk::class, 'produk_id');
+    }
 }

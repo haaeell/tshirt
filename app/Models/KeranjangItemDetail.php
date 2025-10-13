@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class KeranjangItemDetail extends Model
 {
     protected $table = 'keranjang_item_detail';
-    protected $fillable = ['keranjang_item_id', 'ukuran', 'qty', 'harga_satuan', 'subtotal'];
+    protected $fillable = ['keranjang_item_id', 'ukuran', 'lengan', 'qty', 'harga_satuan', 'subtotal'];
 
     public function item()
     {

@@ -15,8 +15,7 @@ class HomeController extends Controller
 
     public function welcome()
     {
-        $produk = Produk::where('aktif', true)
-            ->latest()
+        $produk = Produk::latest()
             ->take(8)
             ->get();
 

@@ -6,181 +6,230 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Toko Delapan')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <<<<<<< HEAD <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
-        rel="stylesheet">
-        =======
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-        >>>>>>> 11d4eb1fb5f92386e2ee03fe4348d7c9c387e927
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 
-        <style>
-            :root {
-                --bg-light: rgba(255, 255, 255, 0.85);
-                --text-light: #333;
-                --link-light: #555;
-                --accent-light: #0d6efd;
+    <style>
+        :root {
+            --bg-light: rgba(255, 255, 255, 0.85);
+            --text-light: #333;
+            --link-light: #555;
+            --accent-light: #0d6efd;
 
-                --bg-dark: rgba(20, 20, 20, 0.8);
-                --text-dark: #f5f5f5;
-                --link-dark: #bbb;
-                --accent-dark: #66b2ff;
+            --bg-dark: rgba(20, 20, 20, 0.8);
+            --text-dark: #f5f5f5;
+            --link-dark: #bbb;
+            --accent-dark: #66b2ff;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: #fafafa;
+            color: var(--text-light);
+            transition: background 0.4s, color 0.4s;
+        }
+
+        body.dark {
+            background-color: #111;
+            color: var(--text-dark);
+        }
+
+        /* Navbar */
+        .navbar {
+            background: var(--bg-light) !important;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease-in-out;
+        }
+
+        body.dark .navbar {
+            background: var(--bg-dark) !important;
+        }
+
+        .navbar.scrolled {
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent-light) !important;
+            transition: color 0.3s;
+        }
+
+        body.dark .navbar-brand {
+            color: var(--accent-dark) !important;
+        }
+
+        .navbar .nav-link {
+            font-weight: 500;
+            color: var(--link-light) !important;
+            position: relative;
+            transition: color 0.3s ease-in-out;
+        }
+
+        body.dark .navbar .nav-link {
+            color: var(--link-dark) !important;
+        }
+
+        .navbar .nav-link::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--accent-light);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        body.dark .navbar .nav-link::after {
+            background: var(--accent-dark);
+        }
+
+        .navbar .nav-link:hover::after,
+        .navbar .nav-link.active::after {
+            width: 70%;
+        }
+
+        .navbar .nav-link.active {
+            color: var(--accent-light) !important;
+        }
+
+        body.dark .navbar .nav-link.active {
+            color: var(--accent-dark) !important;
+        }
+
+        .dropdown-menu {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            animation: fadeIn 0.2s ease;
+        }
+
+        body.dark .dropdown-menu {
+            background: #222;
+            color: #fff;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
             }
 
-            body {
-                font-family: 'Inter', system-ui, sans-serif;
-                background-color: #fafafa;
-                color: var(--text-light);
-                transition: background 0.4s, color 0.4s;
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
+        }
 
-            body.dark {
-                background-color: #111;
-                color: var(--text-dark);
-            }
+        /* Toggle theme button */
+        #themeToggle {
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 1.3rem;
+            color: var(--link-light);
+            transition: transform 0.4s ease, color 0.3s;
+        }
 
-            /* Navbar */
-            .navbar {
-                background: var(--bg-light) !important;
-                backdrop-filter: blur(10px);
-                transition: all 0.3s ease-in-out;
-            }
+        body.dark #themeToggle {
+            color: var(--link-dark);
+        }
 
-            body.dark .navbar {
-                background: var(--bg-dark) !important;
-            }
+        #themeToggle.rotate {
+            transform: rotate(360deg);
+        }
 
-            .navbar.scrolled {
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-            }
+        /* Footer */
+        footer {
+            border-top: 1px solid #e9ecef;
+            background: #fff;
+            transition: background 0.4s, color 0.4s;
+        }
 
-            .navbar-brand {
-                font-weight: 700;
-                letter-spacing: 1px;
-                color: var(--accent-light) !important;
-                transition: color 0.3s;
-            }
+        body.dark footer {
+            background: #1b1b1b;
+            border-color: #333;
+        }
 
-            body.dark .navbar-brand {
-                color: var(--accent-dark) !important;
-            }
+        footer h5 {
+            font-size: 1rem;
+            margin-bottom: .75rem;
+            font-weight: 600;
+        }
 
-            .navbar .nav-link {
-                font-weight: 500;
-                color: var(--link-light) !important;
-                position: relative;
-                transition: color 0.3s ease-in-out;
-            }
+        footer p {
+            margin: 0;
+            color: #666;
+        }
 
-            body.dark .navbar .nav-link {
-                color: var(--link-dark) !important;
-            }
+        body.dark footer p {
+            color: #aaa;
+        }
 
-            .navbar .nav-link::after {
-                content: "";
-                position: absolute;
-                bottom: 0;
-                left: 50%;
-                width: 0;
-                height: 2px;
-                background: var(--accent-light);
-                transition: all 0.3s ease;
-                transform: translateX(-50%);
-            }
+        footer img {
+            border-radius: 10px;
+            transition: transform 0.4s ease;
+        }
 
-            body.dark .navbar .nav-link::after {
-                background: var(--accent-dark);
-            }
+        footer img:hover {
+            transform: scale(1.03);
+        }
 
-            .navbar .nav-link:hover::after,
-            .navbar .nav-link.active::after {
-                width: 70%;
-            }
+        .btn-primary {
+            position: relative;
+            overflow: hidden;
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            background: linear-gradient(135deg, #0d6efd, #3b8efc);
+            border-radius: 50px;
+            padding: 0.6rem 1.4rem;
+            transition: all 0.35s ease;
+            box-shadow: 0 3px 10px rgba(13, 110, 253, 0.3);
+        }
 
-            .navbar .nav-link.active {
-                color: var(--accent-light) !important;
-            }
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(13, 110, 253, 0.45);
+            background: linear-gradient(135deg, #3b8efc, #0d6efd);
+        }
 
-            body.dark .navbar .nav-link.active {
-                color: var(--accent-dark) !important;
-            }
+        .btn-primary:active {
+            transform: scale(0.96);
+            box-shadow: 0 3px 6px rgba(13, 110, 253, 0.4);
+        }
 
-            .dropdown-menu {
-                border: none;
-                border-radius: 10px;
-                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-                animation: fadeIn 0.2s ease;
-            }
+        .btn-primary::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: skewX(-20deg);
+            transition: left 0.5s ease;
+        }
 
-            body.dark .dropdown-menu {
-                background: #222;
-                color: #fff;
-            }
+        .btn-primary:hover::before {
+            left: 120%;
+        }
 
-            @keyframes fadeIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(5px);
-                }
+        /* Dark mode adaptation */
+        body.dark .btn-primary {
+            background: linear-gradient(135deg, #66b2ff, #007bff);
+            box-shadow: 0 3px 10px rgba(102, 178, 255, 0.2);
+        }
 
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-
-            /* Toggle theme button */
-            #themeToggle {
-                cursor: pointer;
-                border: none;
-                background: transparent;
-                font-size: 1.3rem;
-                color: var(--link-light);
-                transition: transform 0.4s ease, color 0.3s;
-            }
-
-            body.dark #themeToggle {
-                color: var(--link-dark);
-            }
-
-            #themeToggle.rotate {
-                transform: rotate(360deg);
-            }
-
-            /* Footer */
-            footer {
-                border-top: 1px solid #e9ecef;
-                background: #fff;
-                transition: background 0.4s, color 0.4s;
-            }
-
-            body.dark footer {
-                background: #1b1b1b;
-                border-color: #333;
-            }
-
-            footer h5 {
-                font-size: 1rem;
-                margin-bottom: .75rem;
-                font-weight: 600;
-            }
-
-            footer p {
-                margin: 0;
-                color: #666;
-            }
-
-            body.dark footer p {
-                color: #aaa;
-            }
-
-            footer img {
-                border-radius: 10px;
-                transition: transform 0.4s ease;
-            }
-
-            footer img:hover {
-                transform: scale(1.03);
-            }
-        </style>
+        body.dark .btn-primary:hover {
+            box-shadow: 0 8px 20px rgba(102, 178, 255, 0.4);
+            background: linear-gradient(135deg, #007bff, #66b2ff);
+        }
+    </style>
 </head>
 
 <body>
@@ -196,12 +245,10 @@
                 <ul class="navbar-nav ms-auto align-items-lg-center">
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('welcome') ? 'active' : '' }}"
                             href="{{ route('welcome') }}">Home</a></li>
-                    <li class="nav-item"><a class="nav-link {{ request()->is('tentang') ? 'active' : '' }}"
-                            href="{{ url('/tentang') }}">Tentang</a></li>
-                    <li class="nav-item"><a class="nav-link {{ request()->routeIs('users.produk.*') ? 'active' : '' }}"
-                            href="{{ route('users.produk.index') }}">Produk</a></li>
-                    <li class="nav-item"><a class="nav-link {{ request()->is('kontak') ? 'active' : '' }}"
-                            href="{{ url('/kontak') }}">Kontak</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#produk">Produk</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#tentang">Tentang</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#kontak">Kontak</a></li>
+
 
                     @guest
                         <li class="nav-item ms-lg-2">
@@ -271,14 +318,14 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // Scroll shadow effect
         window.addEventListener('scroll', () => {
             const navbar = document.querySelector('.navbar');
             navbar.classList.toggle('scrolled', window.scrollY > 20);
         });
 
-        // === THEME TOGGLE with animation ===
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
 
@@ -304,6 +351,35 @@
             setTheme(!document.body.classList.contains('dark'));
         });
     </script>
+
+    @if (session('success') || session('error'))
+        <script>
+            $(document).ready(function() {
+                var successMessage = "{{ session('success') }}";
+                var errorMessage = "{{ session('error') }}";
+
+                if (successMessage) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: successMessage,
+                    });
+                }
+
+                if (errorMessage) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: errorMessage,
+                    });
+                }
+            });
+        </script>
+    @endif
+
+    @stack('scripts')
+
+
 </body>
 
 </html>

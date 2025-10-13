@@ -2,20 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AlamatPengiriman;
 use App\Models\Keranjang;
 use App\Models\Pesanan;
 use App\Models\PesananItem;
+use App\Models\PesananItemDetail;
+use App\Models\UlasanProduk;
 use App\Models\Voucher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
     public function checkout()
     {
-        $keranjang = \App\Models\Keranjang::with(['items.details', 'items.produk'])
-            ->where('user_id', auth()->id())
+        $keranjang = Keranjang::with(['items.details', 'items.produk'])
+            ->where('user_id', Auth::user()->id)
             ->first();
 
         if (!$keranjang || $keranjang->items->isEmpty()) {
@@ -38,7 +40,7 @@ class OrderController extends Controller
             'kode_pos' => 'nullable|string|max:10',
         ]);
 
-        $keranjang = \App\Models\Keranjang::with(['items.details'])->where('user_id', auth()->id())->first();
+        $keranjang = Keranjang::with(['items.details'])->where('user_id', Auth::id(),)->first();
 
         if (!$keranjang) {
             return back()->with('error', 'Keranjang tidak ditemukan.');
@@ -46,15 +48,13 @@ class OrderController extends Controller
 
         $total = $keranjang->items->sum('subtotal');
 
-        // === Simpan Pesanan ===
-        $pesanan = \App\Models\Pesanan::create([
-            'user_id' => auth()->id(),
+        $pesanan = Pesanan::create([
+            'user_id' => Auth::id(),
             'total' => $total,
             'status' => 'pending',
         ]);
 
-        // Simpan Alamat
-        \App\Models\AlamatPengiriman::create([
+        AlamatPengiriman::create([
             'pesanan_id' => $pesanan->id,
             'nama_penerima' => $request->nama_penerima,
             'telepon' => $request->telepon,
@@ -64,21 +64,20 @@ class OrderController extends Controller
             'kode_pos' => $request->kode_pos,
         ]);
 
-        // Simpan Item
         foreach ($keranjang->items as $item) {
-            $pesananItem = \App\Models\PesananItem::create([
+            $pesananItem = PesananItem::create([
                 'pesanan_id' => $pesanan->id,
                 'produk_id' => $item->produk_id,
                 'warna' => $item->warna,
                 'bahan' => $item->bahan,
-                'lengan' => $item->lengan,
                 'subtotal' => $item->subtotal,
             ]);
 
             foreach ($item->details as $d) {
-                \App\Models\PesananItemDetail::create([
+                PesananItemDetail::create([
                     'pesanan_item_id' => $pesananItem->id,
                     'ukuran' => $d->ukuran,
+                    'lengan' => $d->lengan,
                     'qty' => $d->qty,
                     'harga_satuan' => $d->harga_satuan,
                     'subtotal' => $d->subtotal,
@@ -86,7 +85,6 @@ class OrderController extends Controller
             }
         }
 
-        // Kosongkan keranjang setelah checkout
         $keranjang->items()->delete();
         $keranjang->delete();
 
@@ -132,14 +130,12 @@ class OrderController extends Controller
         return response()->json(['success' => true, 'diskon' => $diskon]);
     }
 
-    // daftar pesanan user
     public function index()
     {
         $pesanan = Pesanan::where('user_id', Auth::id())->latest()->get();
         return view('users.orders.index', compact('pesanan'));
     }
 
-    // detail pesanan
     public function show($id)
     {
         $pesanan = Pesanan::with([
@@ -166,4 +162,51 @@ class OrderController extends Controller
         return back()->with('success', 'Bukti pembayaran berhasil diupload.');
     }
 
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate(['status' => 'required|string']);
+
+        $pesanan = Pesanan::findOrFail($id);
+        $pesanan->status = $request->status;
+        $pesanan->save();
+
+        return back()->with('success', 'Status pesanan berhasil diperbarui.');
+    }
+
+    public function reviewProduk(Request $request, $itemId)
+    {
+        $request->validate([
+            'produk_id' => 'required|exists:produk,id',
+            "rating.$itemId" => 'required|integer|min:1|max:5',
+            'komentar' => 'nullable|string|max:1000',
+        ]);
+
+        $userId = Auth::id();
+        $produkId = $request->produk_id;
+        $rating = $request->input("rating.$itemId");
+        $komentar = $request->komentar;
+
+        $item = PesananItem::findOrFail($itemId);
+        if ($item->pesanan->user_id !== $userId) {
+            abort(403, 'Tidak diizinkan memberi ulasan untuk pesanan ini.');
+        }
+
+        $existing = UlasanProduk::where('pesanan_item_id', $itemId)
+            ->where('user_id', $userId)
+            ->first();
+
+        if ($existing) {
+            return back()->with('info', 'Anda sudah memberikan ulasan untuk produk ini.');
+        }
+
+        UlasanProduk::create([
+            'pesanan_item_id' => $itemId,
+            'produk_id' => $produkId,
+            'user_id' => $userId,
+            'rating' => $rating,
+            'komentar' => $komentar,
+        ]);
+
+        return back()->with('success', 'Terima kasih! Ulasan Anda telah dikirim.');
+    }
 }

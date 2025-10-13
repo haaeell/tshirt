@@ -38,40 +38,21 @@ class CartController extends Controller
         try {
             $userId = Auth::id();
 
-            // Ambil atau buat keranjang user
             $keranjang = Keranjang::firstOrCreate(['user_id' => $userId]);
 
-            // Ambil produk
             $produk = Produk::findOrFail($request->produk_id);
 
-            // Hitung subtotal
             $details = json_decode($request->detail_json, true);
             $subtotal = collect($details)->sum('subtotal');
 
-            $bahanName = null;
-            $lenganName = null;
-
-            if ($request->bahan) {
-                $bahan = \App\Models\Bahan::find($request->bahan);
-                $bahanName = $bahan?->nama;
-            }
-
-            if ($request->lengan) {
-                $lengan = \App\Models\Lengan::find($request->lengan);
-                $lenganName = $lengan?->tipe;
-            }
-
-            // Simpan item utama
             $item = KeranjangItem::create([
                 'keranjang_id' => $keranjang->id,
                 'produk_id' => $produk->id,
                 'warna' => $request->warna,
-                'bahan' => $bahanName,
-                'lengan' => $lenganName,
+                'bahan' => $request->bahan,
                 'subtotal' => $subtotal,
             ]);
 
-            // Simpan per-ukuran
             foreach ($details as $d) {
                 KeranjangItemDetail::create([
                     'keranjang_item_id' => $item->id,
@@ -79,6 +60,7 @@ class CartController extends Controller
                     'qty' => $d['qty'],
                     'harga_satuan' => $d['harga_satuan'],
                     'subtotal' => $d['subtotal'],
+                    'lengan' => $d['lengan'],
                 ]);
             }
 
