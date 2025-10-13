@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CustomSablonController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PesananController;
@@ -100,4 +101,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('pesanan/{id}/upload-bukti', [OrderController::class, 'uploadBukti'])->name('users.orders.uploadBukti');
     Route::post('pesanan/{id}/status', [OrderController::class, 'updateStatus'])->name('users.orders.updateStatus');
     Route::post('pesanan/{id}/review-produk', [OrderController::class, 'reviewProduk'])->name('users.orders.reviewProduk');
+
+    Route::post('/custom-sablon/save', [CustomSablonController::class, 'store'])->name('custom-sablon.store');
+    Route::get('/custom-sablon', [CustomSablonController::class, 'create'])->name('custom-sablon.create');
 });

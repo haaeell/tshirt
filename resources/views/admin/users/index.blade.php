@@ -21,11 +21,11 @@
                     <tbody>
                         @foreach ($users as $user)
                             <tr>
-                                <td>{{ $user->name }}</td>
+                                <td>{{ $user->nama }}</td>
                                 <td>{{ $user->email }}</td>
                                 <td>
                                     <button class="btn btn-warning text-white btn-sm btn-edit" data-id="{{ $user->id }}"
-                                        data-name="{{ $user->name }}" data-email="{{ $user->email }}"
+                                        data-name="{{ $user->nama }}" data-email="{{ $user->email }}"
                                         data-bs-toggle="modal" data-bs-target="#adminModal">
                                         <i class="fas fa-edit"></i>
                                     </button>

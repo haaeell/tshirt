@@ -9,10 +9,15 @@
             <div class="col-md-6">
                 <div class="card border-0 shadow-sm overflow-hidden">
                     <div class="position-relative">
-                        <img id="mainImage"
-                            src="{{ asset('storage/' . ($produk->mockup->first()->file_path ?? 'placeholder.png')) }}"
-                            class="img-fluid rounded w-100" alt="{{ $produk->nama }}">
+                        <div class="mockup-stage ratio ratio-1x1">
+                            <div id="colorLayer" class="mockup-color"></div>
+
+                            <img id="mockupImg"
+                                src="{{ asset('storage/' . ($produk->mockup->first()->file_path ?? 'placeholder.png')) }}"
+                                alt="{{ $produk->nama }}" class="mockup-img">
+                        </div>
                     </div>
+
 
                     <!-- Thumbnail Carousel -->
                     <div class="d-flex overflow-auto gap-2 p-3 border-top bg-light rounded-bottom">
@@ -37,7 +42,8 @@
                     <div class="d-flex flex-wrap gap-2">
                         @foreach ($produk->warna as $w)
                             <div class="color-option" style="background: {{ $w->hex ?? '#ccc' }}"
-                                data-nama="{{ $w->nama }}" title="{{ $w->nama }}"></div>
+                                data-nama="{{ $w->nama }}" data-hex="{{ $w->hex ?? '#ccc' }}"
+                                title="{{ $w->nama }}"></div>
                         @endforeach
                     </div>
                     <input type="hidden" id="warnaHiddenInput" name="warna">
@@ -162,6 +168,43 @@
             transform: scale(1.05);
         }
 
+        .mockup-stage {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+
+        .mockup-color {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            background-color: #c9c9c9;
+            mix-blend-mode: multiply;
+            opacity: .95;
+            pointer-events: none;
+
+            -webkit-mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-size: contain;
+            mask-repeat: no-repeat;
+            mask-position: center;
+        }
+
+        .mockup-img {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+
         #mainImage {
             max-width: 100%;
             max-height: 350px;
@@ -186,43 +229,68 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const basePrice = {{ $produk->harga }};
-
             const colorOptions = document.querySelectorAll('.color-option');
+            const colorLayer = document.getElementById('colorLayer');
             const mockupThumbs = document.querySelectorAll('.mockup-thumb');
-            const mainImage = document.getElementById('mainImage');
+            const mockupImg = document.getElementById('mockupImg');
+
             const bahanSelect = document.getElementById('bahanSelect');
             const qtyInputs = document.querySelectorAll('.qty-input');
             const totalHargaEl = document.getElementById('totalHarga');
 
-            // pastikan ID sama dengan input form
             const warnaHidden = document.getElementById('warnaHidden');
             const bahanHidden = document.getElementById('bahanHidden');
+            const lenganHidden = document.getElementById('lenganHidden');
             const detailJson = document.getElementById('detailJson');
-
             const cartForm = document.getElementById('cartForm');
 
-            // === Ganti gambar utama saat klik thumbnail ===
+            const basePrice = Number({{ $produk->harga }}) || 0;
+
+            // ====== THUMBNAIL → GANTI GAMBAR ======
             mockupThumbs.forEach(img => {
                 img.addEventListener('click', () => {
                     mockupThumbs.forEach(t => t.classList.remove('active'));
                     img.classList.add('active');
-                    mainImage.src = img.src;
+                    mockupImg.src = img.src; // <- pakai ID yang benar
                 });
             });
 
-            // === Pilih warna ===
+            const applyMaskFromImg = () => {
+                const src = mockupImg.src;
+                colorLayer.style.webkitMaskImage = `url('${src}')`;
+                colorLayer.style.maskImage = `url('${src}')`;
+            };
+
+            // ==== THUMBNAIL → GANTI GAMBAR & MASK ====
+            mockupThumbs.forEach(img => {
+                img.addEventListener('click', () => {
+                    mockupThumbs.forEach(t => t.classList.remove('active'));
+                    img.classList.add('active');
+                    mockupImg.src = img.src;
+                    applyMaskFromImg();
+                });
+            });
+
+            applyMaskFromImg();
+
             colorOptions.forEach(el => {
                 el.addEventListener('click', () => {
                     colorOptions.forEach(c => c.classList.remove('active'));
                     el.classList.add('active');
-
-                    warnaHidden.value = el.dataset.nama;
-                    console.log('warna terpilih:', warnaHidden.value);
+                    const hex = el.dataset.hex || '#c9c9c9';
+                    const name = el.dataset.nama || hex;
+                    colorLayer.style.backgroundColor = hex;
+                    warnaHidden.value = name;
                 });
             });
 
-            // === Update total harga & simpan detail JSON ===
+            if (colorOptions.length) {
+                const first = colorOptions[0];
+                first.classList.add('active');
+                colorLayer.style.backgroundColor = first.dataset.hex || '#c9c9c9';
+                warnaHidden.value = first.dataset.nama || (first.dataset.hex || '#c9c9c9');
+            }
+
             function updateTotal() {
                 const bahanHarga = parseFloat(bahanSelect.selectedOptions[0]?.dataset.harga || 0);
                 let total = 0;
@@ -263,9 +331,8 @@
             bahanSelect.addEventListener('change', updateTotal);
             qtyInputs.forEach(i => i.addEventListener('input', updateTotal));
 
-            // === Validasi dan sync data sebelum submit ===
             cartForm.addEventListener('submit', function(e) {
-                updateTotal(); // jalankan updateTotal untuk isi semua input
+                updateTotal();
 
                 if (!warnaHidden.value) {
                     e.preventDefault();
@@ -301,23 +368,7 @@
                     return;
                 }
 
-                // log buat debug di console
-                console.log('=== Data akan dikirim ===', {
-                    warna: warnaHidden.value,
-                    bahan: bahanHidden.value,
-                    detail_json: detailJson.value
-                });
             });
-
-            // === Tampilkan error Laravel ===
-            @if ($errors->any())
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal!',
-                    html: `{!! implode('<br>', $errors->all()) !!}`,
-                    confirmButtonColor: '#0d6efd'
-                });
-            @endif
         });
     </script>
 @endpush

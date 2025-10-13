@@ -154,7 +154,7 @@ class ProdukVarianController extends Controller
         $request->validate([
             'produk_id' => 'required|exists:produk,id',
             'angle' => 'required|string|max:50',
-            'file_path' => 'required|image|mimes:png,jpg,jpeg|max:2048',
+            'file_path' => 'required|image|mimes:png,jpg,jpeg',
         ]);
 
         $path = $request->file('file_path')->store('mockups', 'public');
@@ -172,7 +172,7 @@ class ProdukVarianController extends Controller
     {
         $request->validate([
             'angle' => 'required|string|max:50',
-            'file_path' => 'nullable|image|mimes:png,jpg,jpeg|max:2048',
+            'file_path' => 'nullable|image|mimes:png,jpg,jpeg',
         ]);
 
         $data = ['angle' => $request->angle];
@@ -222,5 +222,4 @@ class ProdukVarianController extends Controller
         $ukuran->delete();
         return response()->json(['success' => true]);
     }
-
 }
