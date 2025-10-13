@@ -16,14 +16,16 @@ class ProdukController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama' => 'required|string|max:255',
-            'jenis' => 'required|string|max:100',
-            'harga' => 'required|numeric|min:0',
-            'deskripsi' => 'nullable|string',
-            'aktif' => 'boolean',
+            'nama'          => 'required|string|max:255',
+            'jenis_produk'  => 'required|string|max:100',
+            'harga'         => 'required|numeric|min:0',
         ]);
 
-        Produk::create($request->only('nama', 'jenis', 'deskripsi', 'harga', 'aktif'));
+        Produk::create([
+            'nama'         => $request->nama,
+            'jenis_produk' => $request->jenis_produk,
+            'harga'        => $request->harga,
+        ]);
 
         return redirect()->back()->with('success', 'Produk berhasil ditambahkan');
     }
@@ -31,14 +33,16 @@ class ProdukController extends Controller
     public function update(Request $request, Produk $produk)
     {
         $request->validate([
-            'nama' => 'required|string|max:255',
-            'jenis' => 'required|string|max:100',
-            'harga' => 'required|numeric|min:0',
-            'deskripsi' => 'nullable|string',
-            'aktif' => 'boolean',
+            'nama'          => 'required|string|max:255',
+            'jenis_produk'  => 'required|string|max:100',
+            'harga'         => 'required|numeric|min:0',
         ]);
 
-        $produk->update($request->only('nama', 'jenis', 'deskripsi', 'harga', 'aktif'));
+        $produk->update([
+            'nama'         => $request->nama,
+            'jenis_produk' => $request->jenis_produk,
+            'harga'        => $request->harga,
+        ]);
 
         return redirect()->back()->with('success', 'Produk berhasil diperbarui');
     }

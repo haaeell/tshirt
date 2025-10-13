@@ -10,12 +10,7 @@ class UlasanProduk extends Model
     use HasFactory;
 
     protected $table = 'ulasan_produk';
-    protected $fillable = ['pesanan_item_id','produk_id','user_id','rating','komentar'];
-
-    public function pesananItem()
-    {
-        return $this->belongsTo(PesananItem::class);
-    }
+    protected $fillable = ['pesanan_item_id', 'produk_id', 'user_id', 'rating', 'komentar'];
 
     public function produk()
     {
@@ -25,5 +20,10 @@ class UlasanProduk extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function pesananItem()
+    {
+        return $this->belongsTo(PesananItem::class);
     }
 }

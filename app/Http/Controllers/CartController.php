@@ -4,102 +4,121 @@ namespace App\Http\Controllers;
 
 use App\Models\Keranjang;
 use App\Models\KeranjangItem;
+use App\Models\KeranjangItemDetail;
 use App\Models\Produk;
-use App\Models\ProdukVarian;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
 {
+    /**
+     * Tampilkan isi keranjang user.
+     */
     public function index()
     {
-        $keranjang = Keranjang::firstOrCreate(['user_id' => Auth::id()]);
-        $items = $keranjang->items()->with('produk', 'produkVarian')->get();
+        $keranjang = Keranjang::with(['items.details', 'items.produk'])
+            ->where('user_id', Auth::id())
+            ->first();
 
-        return view('users.cart.index', compact('items'));
+        return view('users.cart.index', compact('keranjang'));
     }
 
+    /**
+     * Tambah produk ke keranjang.
+     */
     public function store(Request $request)
     {
         $request->validate([
             'produk_id' => 'required|exists:produk,id',
-            'qty' => 'required|integer|min:1',
-            'warna' => 'required|string',
-            'ukuran' => 'required|string',
-            'lengan' => 'required|string',
-            'material_id' => 'nullable|exists:materials,id',
+            'detail_json' => 'required|string',
         ]);
 
-        $keranjang = Keranjang::firstOrCreate(['user_id' => Auth::id()]);
+        DB::beginTransaction();
+        try {
+            $userId = Auth::id();
 
-        $produk = Produk::findOrFail($request->produk_id);
+            // Ambil atau buat keranjang user
+            $keranjang = Keranjang::firstOrCreate(['user_id' => $userId]);
 
-        // cari varian berdasarkan kombinasi
-        $varian = ProdukVarian::where('produk_id', $produk->id)
-            ->where('warna', $request->warna)
-            ->where('ukuran', $request->ukuran)
-            ->where('lengan', $request->lengan)
-            ->when($request->material_id, fn($q) => $q->where('material_id', $request->material_id))
-            ->firstOrFail();
+            // Ambil produk
+            $produk = Produk::findOrFail($request->produk_id);
 
-        // ambil harga varian kalau ada, kalau null pakai harga produk
-        $harga = $varian->harga ?? $produk->harga;
+            // Hitung subtotal
+            $details = json_decode($request->detail_json, true);
+            $subtotal = collect($details)->sum('subtotal');
 
-        // cek apakah item sudah ada
-        $item = $keranjang->items()
-            ->where('produk_id', $produk->id)
-            ->where('produk_varian_id', $varian->id)
-            ->first();
+            $bahanName = null;
+            $lenganName = null;
 
-        if ($item) {
-            $item->qty += $request->qty;
-            $item->subtotal = $item->qty * $harga;
-            $item->save();
-        } else {
-            $detailSablon = null;
-            $pakaiSablon = $request->pakai_sablon == 1;
-
-            if ($pakaiSablon) {
-                $detailSablon = [
-                    'material_id' => $request->sablon_material_id,
-                    'posisi' => $request->sablon_posisi ?? [],
-                ];
+            if ($request->bahan) {
+                $bahan = \App\Models\Bahan::find($request->bahan);
+                $bahanName = $bahan?->nama;
             }
 
-            $keranjang->items()->create([
-                'produk_id' => $produk->id,
-                'produk_varian_id' => $varian->id,
-                'qty' => $request->qty,
-                'harga_satuan' => $harga,
-                'subtotal' => $harga * $request->qty,
-                'pakai_sablon' => $pakaiSablon,
-                'detail_sablon' => $detailSablon ? json_encode($detailSablon) : null,
-            ]);
-        }
+            if ($request->lengan) {
+                $lengan = \App\Models\Lengan::find($request->lengan);
+                $lenganName = $lengan?->tipe;
+            }
 
-        return redirect()->route('users.cart.index')
-            ->with('success', 'Produk ditambahkan ke keranjang!');
+            // Simpan item utama
+            $item = KeranjangItem::create([
+                'keranjang_id' => $keranjang->id,
+                'produk_id' => $produk->id,
+                'warna' => $request->warna,
+                'bahan' => $bahanName,
+                'lengan' => $lenganName,
+                'subtotal' => $subtotal,
+            ]);
+
+            // Simpan per-ukuran
+            foreach ($details as $d) {
+                KeranjangItemDetail::create([
+                    'keranjang_item_id' => $item->id,
+                    'ukuran' => $d['ukuran'],
+                    'qty' => $d['qty'],
+                    'harga_satuan' => $d['harga_satuan'],
+                    'subtotal' => $d['subtotal'],
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('users.cart.index')->with('success', 'Produk berhasil ditambahkan ke keranjang!');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menambah ke keranjang: ' . $e->getMessage());
+        }
     }
 
-
+    /**
+     * Update item di keranjang (jumlah atau varian).
+     */
     public function update(Request $request, $id)
     {
-        $request->validate(['qty' => 'required|integer|min:1']);
+        $item = KeranjangItem::whereHas('keranjang', function ($q) {
+            $q->where('user_id', Auth::id());
+        })->findOrFail($id);
 
-        $item = KeranjangItem::findOrFail($id);
-        $item->qty = $request->qty;
-        $item->subtotal = $item->qty * $item->harga_satuan;
-        $item->save();
+        $item->update([
+            'warna' => $request->warna,
+            'bahan' => $request->bahan,
+            'lengan' => $request->lengan,
+        ]);
 
-        return redirect()->route('users.cart.index');
+        return back()->with('success', 'Keranjang diperbarui.');
     }
 
-    // hapus item
+    /**
+     * Hapus item dari keranjang.
+     */
     public function destroy($id)
     {
-        $item = KeranjangItem::findOrFail($id);
+        $item = KeranjangItem::whereHas('keranjang', function ($q) {
+            $q->where('user_id', Auth::id());
+        })->findOrFail($id);
+
         $item->delete();
 
-        return redirect()->route('users.cart.index')->with('success', 'Item berhasil dihapus');
+        return back()->with('success', 'Item dihapus dari keranjang.');
     }
 }

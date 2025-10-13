@@ -2,14 +2,23 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Customer extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id','no_hp','jenis_kelamin','tgl_lahir','foto'];
+    // tambahkan ini biar pakai tabel 'customers'
+    protected $table = 'customers';
+
+    protected $fillable = [
+        'user_id',
+        'no_hp',
+        'jenis_kelamin',
+        'tgl_lahir',
+        'foto',
+    ];
 
     public function user()
     {
