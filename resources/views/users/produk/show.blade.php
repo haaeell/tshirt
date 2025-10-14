@@ -3,11 +3,11 @@
 @section('title', $produk->nama . ' - Detail Produk')
 
 @section('content')
-    <div class="container py-5">
+    <div class="container py-4" style="max-width: 1100px;">
         <div class="row g-5 align-items-start">
             <!-- ========== MOCKUP / GALERI PRODUK ========== -->
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm overflow-hidden">
+            <div class="col-lg-5 col-md-6">
+                <div class="card border-1 shadow-sm overflow-hidden">
                     <div class="position-relative">
                         <div class="mockup-stage ratio ratio-1x1">
                             <div id="colorLayer" class="mockup-color"></div>
@@ -32,40 +32,63 @@
             </div>
 
             <!-- ========== DETAIL PRODUK ========== -->
-            <div class="col-md-6">
-                <h2 class="fw-bold mb-1">{{ $produk->nama }}</h2>
-                <p class="text-muted mb-2">{{ ucfirst($produk->jenis_produk) }}</p>
-                <h4 class="text-primary fw-bold mb-4">Rp {{ number_format($produk->harga, 0, ',', '.') }}</h4>
+            <div class="col-lg-7 col-md-6">
+                <h4 class="fw-bold mb-1">{{ $produk->nama }}</h4>
+                <p class="text-muted m-0">{{ ucfirst($produk->jenis_produk) }}</p>
+                <h5 class="text-dark fw-bold mb-3">Rp {{ number_format($produk->harga, 0, ',', '.') }}</h5>
 
-                <!-- WARNA -->
-                <div class="mb-3">
-                    <label class="fw-semibold mb-2">Warna:</label>
-                    <div class="d-flex flex-wrap gap-2">
-                        @foreach ($produk->warna as $w)
-                            <div class="color-option" style="background: {{ $w->hex ?? '#ccc' }}"
-                                data-nama="{{ $w->nama }}" data-hex="{{ $w->hex ?? '#ccc' }}"
-                                title="{{ $w->nama }}"></div>
-                        @endforeach
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- WARNA -->
+                        <div class="mb-2">
+                            <label class="fw-semibold mb-1 small">Warna:</label>
+                            <div class="d-flex flex-wrap gap-1">
+                                @foreach ($produk->warna as $w)
+                                    <div class="color-option" style="background: {{ $w->hex ?? '#ccc' }}"
+                                        data-nama="{{ $w->nama }}" data-hex="{{ $w->hex ?? '#ccc' }}"
+                                        title="{{ $w->nama }}"></div>
+                                @endforeach
+                            </div>
+                            <input type="hidden" id="warnaHiddenInput" name="warna">
+                        </div>
                     </div>
-                    <input type="hidden" id="warnaHiddenInput" name="warna">
+
+                    <div class="col-md-6">
+
+
+                        <!-- BAHAN -->
+                        <div class="mb-3">
+                            <label class="fw-semibold mb-1 small">Bahan:</label>
+                            <select id="bahanSelect" class="form-select w-100">
+                                <option value="">Pilih bahan</option>
+                                @foreach ($produk->bahan as $b)
+                                    <option value="{{ $b->nama }}" data-harga="{{ $b->tambahan_harga }}">
+                                        {{ $b->nama }} (+Rp {{ number_format($b->tambahan_harga, 0, ',', '.') }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- BAHAN -->
-                <div class="mb-4">
-                    <label class="fw-semibold mb-2">Bahan:</label>
-                    <select id="bahanSelect" class="form-select w-75">
-                        <option value="">Pilih bahan</option>
-                        @foreach ($produk->bahan as $b)
-                            <option value="{{ $b->nama }}" data-harga="{{ $b->tambahan_harga }}">
-                                {{ $b->nama }} (+Rp {{ number_format($b->tambahan_harga, 0, ',', '.') }})
-                            </option>
-                        @endforeach
-                    </select>
+                <!-- CUSTOM SABLON -->
+                <div class="mb-3">
+                    <div class="d-flex gap-1">
+                        <input type="file" id="uploadSablonInput" class="form-control" accept="image/*">
+                        <button id="resetCanvas" class="btn btn-outline-secondary flex-shrink-0">
+                            <i class="fas fa-undo me-1"></i> Reset
+                        </button>
+                    </div>
                 </div>
+
+                <button id="saveSablonBtn" class="btn btn-dark w-100 shadow-sm">
+                    <i class="fas fa-save me-1"></i> Simpan Desain
+                </button>
+                <div id="previewContainer" class="mt-3"></div>
 
                 <!-- JUMLAH PER UKURAN + LENGAN -->
-                <div class="mb-4">
-                    <label class="fw-semibold mb-2">Jumlah per Ukuran & Lengan:</label>
+                <div class="mb-3">
+                    <label class="fw-semibold mb-2 small">Jumlah per Ukuran & Lengan:</label>
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered align-middle text-center">
                             <thead class="table-light">
@@ -119,11 +142,6 @@
                     </div>
                 </div>
 
-                <button id="saveSablonBtn" class="btn btn-success w-100 rounded-pill shadow-sm">
-                    <i class="fas fa-save me-1"></i> Simpan Desain
-                </button>
-                <div id="previewContainer" class="mt-3"></div>
-
                 <!-- TOTAL -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="mb-0">Total:</h5>
@@ -145,10 +163,6 @@
                             <i class="fas fa-cart-plus me-1"></i> Tambah ke Keranjang
                         </button>
                     </form>
-
-                    <a href="#" class="btn btn-success rounded-pill px-4 shadow-sm">
-                        <i class="fas fa-credit-card me-1"></i> Beli Sekarang
-                    </a>
                 </div>
             </div>
         </div>
@@ -174,7 +188,7 @@
         }
 
         .mockup-thumb.active {
-            border: 3px solid #0d6efd;
+            border: 1px solid #474747;
             transform: scale(1.05);
         }
 
@@ -190,7 +204,6 @@
 
         .mockup-color {
             display: none;
-            /* sudah tidak dipakai */
         }
 
         .mockup-img {
