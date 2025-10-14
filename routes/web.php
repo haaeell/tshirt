@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CustomSablonController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LaporanPenjualanController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PesananController;
 use App\Http\Controllers\ProductController;
@@ -106,4 +107,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/custom-sablon/store', [CustomSablonController::class, 'store'])->name('custom-sablon.store');
     Route::get('/custom-sablon', [CustomSablonController::class, 'create'])->name('custom-sablon.create');
+
+    Route::get('/laporan/penjualan', [LaporanPenjualanController::class, 'index'])->name('laporan.penjualan');
+    Route::get('/laporan/penjualan/data', [LaporanPenjualanController::class, 'data'])->name('laporan.penjualan.data');
 });

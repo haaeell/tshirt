@@ -80,20 +80,9 @@
             <span class="text-uppercase fw-semibold text-muted small ps-2">Laporan & Konten</span>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="/admin/laporan">
+            <a class="nav-link" href="/laporan/penjualan">
                 <i class="fas fa-file-alt menu-icon"></i>
                 <span class="menu-title">Laporan Penjualan</span>
-            </a>
-        </li>
-
-        <!-- Pengaturan -->
-        <li class="nav-item mt-3">
-            <span class="text-uppercase fw-semibold text-muted small ps-2">Lainnya</span>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="/admin/pengaturan">
-                <i class="fas fa-cog menu-icon"></i>
-                <span class="menu-title">Pengaturan</span>
             </a>
         </li>
 
