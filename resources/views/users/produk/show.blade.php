@@ -82,6 +82,45 @@
                             <i class="fas fa-trash me-1"></i> Hapus Aktif
                         </button>
                     </div>
+
+                    <div class="my-2">
+                        <input type="text" id="textInput" class="form-control" placeholder="Tulis teks sablon...">
+                        <select id="fontSelect" class="form-control mt-2">
+                            <option value="Arial">Arial</option>
+                            <option value="Poppins">Poppins</option>
+                            <option value="Roboto">Roboto</option>
+                            <option value="Montserrat">Montserrat</option>
+                            <option value="Courier New">Courier New</option>
+                            <option value="Pacifico">Pacifico</option>
+                        </select>
+                        <button id="addTextBtn" class="btn btn-outline-dark mt-2">
+                            <i class="fas fa-font me-1"></i> Tambah Teks
+                        </button>
+                    </div>
+
+                    <div id="textTools" class="mt-2 d-none">
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <label class="fw-semibold small mb-0">Warna:</label>
+                            <input type="color" id="textColor" value="#ffffff" class="form-control form-control-color"
+                                style="width: 60px;">
+
+                            <label class="fw-semibold small mb-0">Ukuran:</label>
+                            <input type="range" id="textSize" min="10" max="200" value="32"
+                                style="width: 120px;">
+
+                            <button id="boldToggle" class="btn btn-outline-secondary btn-sm"><i
+                                    class="fas fa-bold"></i></button>
+                            <button id="italicToggle" class="btn btn-outline-secondary btn-sm"><i
+                                    class="fas fa-italic"></i></button>
+                            <button id="alignLeft" class="btn btn-outline-secondary btn-sm"><i
+                                    class="fas fa-align-left"></i></button>
+                            <button id="alignCenter" class="btn btn-outline-secondary btn-sm active"><i
+                                    class="fas fa-align-center"></i></button>
+                            <button id="alignRight" class="btn btn-outline-secondary btn-sm"><i
+                                    class="fas fa-align-right"></i></button>
+                        </div>
+                    </div>
+
                 </div>
 
                 <button id="saveSablonBtn" class="btn btn-dark w-100 shadow-sm">
@@ -263,8 +302,10 @@
             const canvas = document.getElementById('sablonCanvas');
             const ctx = canvas.getContext('2d');
             let backgroundImg = new Image();
-            let uploadedImages = []; // bisa banyak sablon
+            let uploadedImages = [];
             let activeImageIndex = -1;
+            let uploadedTexts = []; // simpan teks sablon
+            let activeTextIndex = -1;
 
             const mockupImgEl = document.getElementById('mockupImg');
             backgroundImg.crossOrigin = "anonymous";
@@ -284,7 +325,6 @@
                     const r = parseInt(hex.substr(1, 2), 16);
                     const g = parseInt(hex.substr(3, 2), 16);
                     const b = parseInt(hex.substr(5, 2), 16);
-
                     for (let i = 0; i < data.length; i += 4) {
                         const alpha = data[i + 3];
                         if (alpha > 30) {
@@ -296,24 +336,73 @@
                     ctx.putImageData(imgData, 0, 0);
                 }
 
-                // gambar semua sablon
+                // gambar gambar sablon
                 uploadedImages.forEach((imgObj, i) => {
                     ctx.globalAlpha = (i === activeImageIndex) ? 1 : 0.9;
                     ctx.drawImage(imgObj.img, imgObj.x, imgObj.y, imgObj.w, imgObj.h);
-
-                    // tampilkan outline hanya jika sedang edit/drag
                     if (showOutline && i === activeImageIndex) {
                         ctx.save();
                         ctx.strokeStyle = 'rgba(255,0,0,0.6)';
                         ctx.lineWidth = 2;
-                        ctx.setLineDash([6, 3]); // dashed line biar lebih halus
+                        ctx.setLineDash([6, 3]);
                         ctx.strokeRect(imgObj.x, imgObj.y, imgObj.w, imgObj.h);
                         ctx.restore();
                     }
                 });
+
+                // gambar teks
+                uploadedTexts.forEach((txtObj, i) => {
+                    const fontStyle =
+                        `${txtObj.italic ? 'italic ' : ''}${txtObj.bold ? 'bold ' : ''}${txtObj.size}px ${txtObj.font}`;
+                    ctx.font = fontStyle;
+                    ctx.fillStyle = txtObj.color;
+                    ctx.textAlign = txtObj.align;
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(txtObj.text, txtObj.x, txtObj.y);
+
+                    if (showOutline && i === activeTextIndex) {
+                        const width = ctx.measureText(txtObj.text).width;
+                        ctx.save();
+                        ctx.strokeStyle = 'rgba(0,123,255,0.7)';
+                        ctx.setLineDash([4, 2]);
+                        ctx.strokeRect(
+                            txtObj.x - (txtObj.align === 'center' ? width / 2 : txtObj.align ===
+                                'right' ? width : 0) - 5,
+                            txtObj.y - txtObj.size / 2,
+                            width + 10,
+                            txtObj.size + 6
+                        );
+                        ctx.restore();
+                    }
+                });
+
                 ctx.globalAlpha = 1;
             }
 
+            document.getElementById('addTextBtn').addEventListener('click', () => {
+                const text = document.getElementById('textInput').value.trim();
+                const font = document.getElementById('fontSelect').value;
+                if (!text) {
+                    Swal.fire('Tulis dulu teksnya!', '', 'warning');
+                    return;
+                }
+
+                uploadedTexts.push({
+                    text,
+                    font,
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    size: 32,
+                    color: '#ffffff',
+                    bold: false,
+                    italic: false,
+                    align: 'center'
+                });
+                activeTextIndex = uploadedTexts.length - 1;
+                document.getElementById('textTools').classList.remove('d-none');
+                redrawCanvas();
+
+            });
 
             // tambah sablon baru
             document.getElementById('uploadSablonInput').addEventListener('change', (e) => {
@@ -341,15 +430,52 @@
 
             let dragging = false,
                 offsetX, offsetY;
+
             canvas.addEventListener('mousedown', (e) => {
                 const rect = canvas.getBoundingClientRect();
                 const x = e.clientX - rect.left,
                     y = e.clientY - rect.top;
+                dragging = false;
+
+                // prioritas: teks dulu
+                for (let i = uploadedTexts.length - 1; i >= 0; i--) {
+                    ctx.font = `${uploadedTexts[i].size}px ${uploadedTexts[i].font}`;
+                    const width = ctx.measureText(uploadedTexts[i].text).width;
+                    const height = uploadedTexts[i].size;
+                    if (x >= uploadedTexts[i].x - width / 2 && x <= uploadedTexts[i].x + width / 2 &&
+                        y >= uploadedTexts[i].y - height && y <= uploadedTexts[i].y) {
+                        activeTextIndex = i;
+                        activeImageIndex = -1;
+                        document.getElementById('textTools').classList.remove('d-none');
+
+                        const txt = uploadedTexts[i];
+                        textColor.value = txt.color;
+                        textSize.value = txt.size;
+                        boldToggle.classList.toggle('btn-primary', txt.bold);
+                        italicToggle.classList.toggle('btn-primary', txt.italic);
+                        [alignLeft, alignCenter, alignRight].forEach(b => b.classList.remove(
+                            'btn-primary'));
+                        document.getElementById('align' + txt.align.charAt(0).toUpperCase() + txt.align
+                                .slice(1))
+                            .classList.add('btn-primary');
+
+                        dragging = 'text';
+                        offsetX = x - txt.x;
+                        offsetY = y - txt.y;
+
+                        redrawCanvas();
+                        return;
+                    }
+
+                }
+
+                // lalu gambar sablon
                 for (let i = uploadedImages.length - 1; i >= 0; i--) {
                     const im = uploadedImages[i];
                     if (x >= im.x && x <= im.x + im.w && y >= im.y && y <= im.y + im.h) {
                         activeImageIndex = i;
-                        dragging = true;
+                        activeTextIndex = -1;
+                        dragging = 'image';
                         offsetX = x - im.x;
                         offsetY = y - im.y;
                         redrawCanvas();
@@ -357,27 +483,40 @@
                     }
                 }
             });
+
             canvas.addEventListener('mousemove', (e) => {
-                if (!dragging || activeImageIndex < 0) return;
+                if (!dragging) return;
                 const rect = canvas.getBoundingClientRect();
                 const x = e.clientX - rect.left,
                     y = e.clientY - rect.top;
-                const im = uploadedImages[activeImageIndex];
-                im.x = x - offsetX;
-                im.y = y - offsetY;
+
+                if (dragging === 'image' && activeImageIndex >= 0) {
+                    const im = uploadedImages[activeImageIndex];
+                    im.x = x - offsetX;
+                    im.y = y - offsetY;
+                }
+
+                if (dragging === 'text' && activeTextIndex >= 0) {
+                    const tx = uploadedTexts[activeTextIndex];
+                    tx.x = x - offsetX;
+                    tx.y = y - offsetY;
+                }
+
                 redrawCanvas();
             });
+
             canvas.addEventListener('mouseup', () => dragging = false);
             canvas.addEventListener('mouseleave', () => dragging = false);
 
+
             canvas.addEventListener('wheel', (e) => {
-                if (activeImageIndex < 0) return;
-                e.preventDefault();
-                const scaleFactor = e.deltaY < 0 ? 1.05 : 0.95;
-                const im = uploadedImages[activeImageIndex];
-                im.w *= scaleFactor;
-                im.h *= scaleFactor;
-                redrawCanvas();
+                if (activeTextIndex >= 0) {
+                    e.preventDefault();
+                    const txt = uploadedTexts[activeTextIndex];
+                    const scale = e.deltaY < 0 ? 1.1 : 0.9;
+                    txt.size = Math.max(10, Math.min(200, txt.size * scale));
+                    redrawCanvas();
+                }
             });
 
             document.getElementById('resetCanvas').addEventListener('click', () => {
@@ -387,26 +526,29 @@
             });
 
             document.getElementById('deleteActiveSablon').addEventListener('click', () => {
-                if (activeImageIndex < 0) {
-                    Swal.fire('Tidak ada sablon aktif', '', 'info');
+                if (activeImageIndex >= 0) {
+                    uploadedImages.splice(activeImageIndex, 1);
+                    activeImageIndex = -1;
+                    redrawCanvas();
                     return;
                 }
-                uploadedImages.splice(activeImageIndex, 1);
-                activeImageIndex = -1;
-                redrawCanvas();
+
+                if (activeTextIndex >= 0) {
+                    uploadedTexts.splice(activeTextIndex, 1);
+                    activeTextIndex = -1;
+                    document.getElementById('textTools').classList.add('d-none');
+                    redrawCanvas();
+                    return;
+                }
+
+                Swal.fire('Tidak ada sablon atau teks aktif', '', 'info');
             });
 
-            // simpan hasil sablon
-            document.getElementById('saveSablonBtn').addEventListener('click', async () => {
-                if (!uploadedImages.length) {
-                    Swal.fire('Belum ada gambar sablon!', '', 'warning');
-                    return;
-                }
 
-                // Redraw tanpa outline
+            document.getElementById('saveSablonBtn').addEventListener('click', async () => {
+
                 redrawCanvas(false);
                 const imageData = canvas.toDataURL('image/png');
-                // Kembalikan outline biar UI tetap interaktif
                 redrawCanvas(true);
 
                 const mockupId = mockupImgEl.dataset.id || 1;
@@ -472,7 +614,7 @@
                     colorOptions.forEach(c => c.classList.remove('active'));
                     el.classList.add('active');
                     warnaHidden.value = el.dataset.nama || el.dataset.hex || '#c9c9c9';
-                    redrawCanvas(); // langsung update canvas
+                    redrawCanvas();
                 });
             });
 
@@ -550,6 +692,61 @@
                         text: 'Masukkan minimal 1 qty.'
                     });
                 }
+            });
+
+            // ========== KONTROL TEKS ==========
+            const textColor = document.getElementById('textColor');
+            const textSize = document.getElementById('textSize');
+            const boldToggle = document.getElementById('boldToggle');
+            const italicToggle = document.getElementById('italicToggle');
+            const alignLeft = document.getElementById('alignLeft');
+            const alignCenter = document.getElementById('alignCenter');
+            const alignRight = document.getElementById('alignRight');
+
+            textColor.addEventListener('input', () => {
+                if (activeTextIndex >= 0) {
+                    uploadedTexts[activeTextIndex].color = textColor.value;
+                    redrawCanvas();
+                }
+            });
+
+            textSize.addEventListener('input', () => {
+                if (activeTextIndex >= 0) {
+                    uploadedTexts[activeTextIndex].size = parseInt(textSize.value);
+                    redrawCanvas();
+                }
+            });
+
+            boldToggle.addEventListener('click', () => {
+                if (activeTextIndex >= 0) {
+                    const txt = uploadedTexts[activeTextIndex];
+                    txt.bold = !txt.bold;
+                    boldToggle.classList.toggle('btn-primary', txt.bold);
+                    redrawCanvas();
+                }
+            });
+
+            italicToggle.addEventListener('click', () => {
+                if (activeTextIndex >= 0) {
+                    const txt = uploadedTexts[activeTextIndex];
+                    txt.italic = !txt.italic;
+                    italicToggle.classList.toggle('btn-primary', txt.italic);
+                    redrawCanvas();
+                }
+            });
+
+            [alignLeft, alignCenter, alignRight].forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (activeTextIndex >= 0) {
+                        const txt = uploadedTexts[activeTextIndex];
+                        txt.align = btn.id === 'alignLeft' ? 'left' : btn.id === 'alignRight' ?
+                            'right' : 'center';
+                        [alignLeft, alignCenter, alignRight].forEach(b => b.classList.remove(
+                            'btn-primary'));
+                        btn.classList.add('btn-primary');
+                        redrawCanvas();
+                    }
+                });
             });
         });
     </script>
