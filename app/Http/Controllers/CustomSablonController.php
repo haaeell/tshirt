@@ -13,7 +13,6 @@ class CustomSablonController extends Controller
     {
         $request->validate([
             'image_data' => 'required|string',
-            'pesanan_item_id' => 'required|integer',
             'mockup_id' => 'required|integer',
         ]);
 
@@ -25,7 +24,7 @@ class CustomSablonController extends Controller
         Storage::disk('public')->put('sablon/preview/' . $imageName, base64_decode($image));
 
         CustomSablon::create([
-            'pesanan_item_id' => $request->pesanan_item_id,
+            'pesanan_item_id' => 1,
             'mockup_id' => $request->mockup_id,
             'file_path' => 'sablon/preview/' . $imageName,
             'preview_file' => 'sablon/preview/' . $imageName,

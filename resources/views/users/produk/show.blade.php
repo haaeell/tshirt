@@ -78,6 +78,9 @@
                         <button id="resetCanvas" class="btn btn-outline-secondary flex-shrink-0">
                             <i class="fas fa-undo me-1"></i> Reset
                         </button>
+                        <button id="deleteActiveSablon" class="btn btn-outline-danger flex-shrink-0">
+                            <i class="fas fa-trash me-1"></i> Hapus Aktif
+                        </button>
                     </div>
                 </div>
 
@@ -129,16 +132,6 @@
                                 @endforeach
                             </tbody>
                         </table>
-                    </div>
-                </div>
-
-                <!-- CUSTOM SABLON -->
-                <div class="mb-4">
-                    <div class="d-flex gap-2">
-                        <input type="file" id="uploadSablonInput" class="form-control" accept="image/*">
-                        <button id="resetCanvas" class="btn btn-outline-secondary flex-shrink-0">
-                            <i class="fas fa-undo me-1"></i> Reset
-                        </button>
                     </div>
                 </div>
 
@@ -203,7 +196,10 @@
         }
 
         .mockup-color {
-            display: none;
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
         }
 
         .mockup-img {
@@ -214,9 +210,16 @@
             height: 100%;
             object-fit: contain;
             pointer-events: none;
-            filter: grayscale(1);
         }
 
+        #sablonCanvas {
+            position: absolute;
+            inset: 0;
+            z-index: 5;
+            width: 100%;
+            height: 100%;
+            cursor: move;
+        }
 
         #mainImage {
             max-width: 100%;
@@ -256,38 +259,28 @@
             const cartForm = document.getElementById('cartForm');
             const basePrice = Number({{ $produk->harga }}) || 0;
 
-            // ===== CUSTOM SABLON LANGSUNG DI MOCKUP =====
+            // ===== CUSTOM SABLON MULTI GAMBAR =====
             const canvas = document.getElementById('sablonCanvas');
             const ctx = canvas.getContext('2d');
-            let backgroundImg = null;
-            let uploadedImg = null;
-            let imgX = 150,
-                imgY = 150,
-                imgW = 200,
-                imgH = 200;
-            let dragging = false,
-                offsetX, offsetY;
+            let backgroundImg = new Image();
+            let uploadedImages = []; // bisa banyak sablon
+            let activeImageIndex = -1;
 
             const mockupImgEl = document.getElementById('mockupImg');
-            backgroundImg = new Image();
             backgroundImg.crossOrigin = "anonymous";
             backgroundImg.onload = () => redrawCanvas();
             backgroundImg.src = mockupImgEl.src;
 
-            function redrawCanvas() {
+            function redrawCanvas(showOutline = true) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (backgroundImg) ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
 
-                if (!backgroundImg) return;
-
-                ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
-
+                // pewarnaan kaos
                 const activeColor = document.querySelector('.color-option.active');
                 if (activeColor) {
                     const hex = activeColor.dataset.hex || '#c9c9c9';
-
                     const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                     const data = imgData.data;
-
                     const r = parseInt(hex.substr(1, 2), 16);
                     const g = parseInt(hex.substr(3, 2), 16);
                     const b = parseInt(hex.substr(5, 2), 16);
@@ -300,75 +293,125 @@
                             data[i + 2] = (data[i + 2] * 0.3 + b * 0.7);
                         }
                     }
-
                     ctx.putImageData(imgData, 0, 0);
                 }
 
-                if (uploadedImg) ctx.drawImage(uploadedImg, imgX, imgY, imgW, imgH);
+                // gambar semua sablon
+                uploadedImages.forEach((imgObj, i) => {
+                    ctx.globalAlpha = (i === activeImageIndex) ? 1 : 0.9;
+                    ctx.drawImage(imgObj.img, imgObj.x, imgObj.y, imgObj.w, imgObj.h);
+
+                    // tampilkan outline hanya jika sedang edit/drag
+                    if (showOutline && i === activeImageIndex) {
+                        ctx.save();
+                        ctx.strokeStyle = 'rgba(255,0,0,0.6)';
+                        ctx.lineWidth = 2;
+                        ctx.setLineDash([6, 3]); // dashed line biar lebih halus
+                        ctx.strokeRect(imgObj.x, imgObj.y, imgObj.w, imgObj.h);
+                        ctx.restore();
+                    }
+                });
+                ctx.globalAlpha = 1;
             }
 
+
+            // tambah sablon baru
             document.getElementById('uploadSablonInput').addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
                 const img = new Image();
                 img.onload = function() {
-                    uploadedImg = img;
                     const scale = Math.min(canvas.width / img.width, canvas.height / img.height) * 0.5;
-                    imgW = img.width * scale;
-                    imgH = img.height * scale;
-                    imgX = (canvas.width - imgW) / 2;
-                    imgY = (canvas.height - imgH) / 2;
+                    const w = img.width * scale;
+                    const h = img.height * scale;
+                    const x = (canvas.width - w) / 2;
+                    const y = (canvas.height - h) / 2;
+                    uploadedImages.push({
+                        img,
+                        x,
+                        y,
+                        w,
+                        h
+                    });
+                    activeImageIndex = uploadedImages.length - 1;
                     redrawCanvas();
                 };
                 img.src = URL.createObjectURL(file);
             });
 
+            let dragging = false,
+                offsetX, offsetY;
             canvas.addEventListener('mousedown', (e) => {
-                if (!uploadedImg) return;
                 const rect = canvas.getBoundingClientRect();
                 const x = e.clientX - rect.left,
                     y = e.clientY - rect.top;
-                if (x >= imgX && x <= imgX + imgW && y >= imgY && y <= imgY + imgH) {
-                    dragging = true;
-                    offsetX = x - imgX;
-                    offsetY = y - imgY;
+                for (let i = uploadedImages.length - 1; i >= 0; i--) {
+                    const im = uploadedImages[i];
+                    if (x >= im.x && x <= im.x + im.w && y >= im.y && y <= im.y + im.h) {
+                        activeImageIndex = i;
+                        dragging = true;
+                        offsetX = x - im.x;
+                        offsetY = y - im.y;
+                        redrawCanvas();
+                        return;
+                    }
                 }
             });
             canvas.addEventListener('mousemove', (e) => {
-                if (!dragging) return;
+                if (!dragging || activeImageIndex < 0) return;
                 const rect = canvas.getBoundingClientRect();
-                imgX = e.clientX - rect.left - offsetX;
-                imgY = e.clientY - rect.top - offsetY;
+                const x = e.clientX - rect.left,
+                    y = e.clientY - rect.top;
+                const im = uploadedImages[activeImageIndex];
+                im.x = x - offsetX;
+                im.y = y - offsetY;
                 redrawCanvas();
             });
             canvas.addEventListener('mouseup', () => dragging = false);
             canvas.addEventListener('mouseleave', () => dragging = false);
 
             canvas.addEventListener('wheel', (e) => {
-                if (!uploadedImg) return;
+                if (activeImageIndex < 0) return;
                 e.preventDefault();
                 const scaleFactor = e.deltaY < 0 ? 1.05 : 0.95;
-                imgW *= scaleFactor;
-                imgH *= scaleFactor;
+                const im = uploadedImages[activeImageIndex];
+                im.w *= scaleFactor;
+                im.h *= scaleFactor;
                 redrawCanvas();
             });
 
             document.getElementById('resetCanvas').addEventListener('click', () => {
-                uploadedImg = null;
+                uploadedImages = [];
+                activeImageIndex = -1;
                 redrawCanvas();
             });
 
+            document.getElementById('deleteActiveSablon').addEventListener('click', () => {
+                if (activeImageIndex < 0) {
+                    Swal.fire('Tidak ada sablon aktif', '', 'info');
+                    return;
+                }
+                uploadedImages.splice(activeImageIndex, 1);
+                activeImageIndex = -1;
+                redrawCanvas();
+            });
+
+            // simpan hasil sablon
             document.getElementById('saveSablonBtn').addEventListener('click', async () => {
-                if (!uploadedImg) {
+                if (!uploadedImages.length) {
                     Swal.fire('Belum ada gambar sablon!', '', 'warning');
                     return;
                 }
 
+                // Redraw tanpa outline
+                redrawCanvas(false);
                 const imageData = canvas.toDataURL('image/png');
+                // Kembalikan outline biar UI tetap interaktif
+                redrawCanvas(true);
+
                 const mockupId = mockupImgEl.dataset.id || 1;
-                const pesananItemId = 1;
-                const csrf = document.querySelector('meta[name="csrf-token"]');
-                const csrfToken = csrf ? csrf.content : '{{ csrf_token() }}';
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ||
+                    '{{ csrf_token() }}';
 
                 try {
                     const response = await fetch('/custom-sablon/store', {
@@ -380,7 +423,6 @@
                         },
                         body: JSON.stringify({
                             image_data: imageData,
-                            pesanan_item_id: pesananItemId,
                             mockup_id: mockupId
                         })
                     });
@@ -390,25 +432,18 @@
                         Swal.fire({
                             icon: 'success',
                             title: 'Desain disimpan!',
-                            text: 'Preview berhasil dibuat.',
                             timer: 1500,
                             showConfirmButton: false
                         });
-
                         const preview = document.createElement('img');
                         preview.src = result.preview_url;
                         preview.className = 'mt-3 rounded shadow-sm w-100';
                         preview.style.objectFit = 'contain';
-                        const container = document.getElementById('previewContainer');
-                        container.innerHTML = '';
-                        container.appendChild(preview);
-
+                        document.getElementById('previewContainer').innerHTML = '';
+                        document.getElementById('previewContainer').appendChild(preview);
                         document.getElementById('customSablonData').value = result.preview_url;
-                    } else {
-                        throw new Error('Gagal menyimpan sablon.');
                     }
                 } catch (err) {
-                    console.error(err);
                     Swal.fire('Gagal menyimpan desain', err.message, 'error');
                 }
             });
