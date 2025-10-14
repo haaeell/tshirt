@@ -21,4 +21,14 @@ class HomeController extends Controller
 
         return view('welcome', compact('produk'));
     }
+
+    public function tentang()
+    {
+        return view('tentang');
+    }
+
+    public function kontak()
+    {
+        return view('kontak');
+    }
 }

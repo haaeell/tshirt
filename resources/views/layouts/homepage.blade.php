@@ -247,10 +247,18 @@
                 <ul class="navbar-nav ms-auto align-items-lg-center">
                     <li class="nav-item"><a class="nav-link {{ request()->routeIs('welcome') ? 'active' : '' }}"
                             href="{{ route('welcome') }}">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#produk">Produk</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#tentang">Tentang</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#kontak">Kontak</a></li>
-
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('produk') ? 'active' : '' }}"
+                            href="{{ route('users.produk.index') }}">Produk</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('tentang') ? 'active' : '' }}"
+                            href="{{ route('tentang') }}">Tentang</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('kontak') ? 'active' : '' }}"
+                            href="{{ route('kontak') }}">Kontak</a>
+                    </li>
 
                     @guest
                         <li class="nav-item ms-lg-2">

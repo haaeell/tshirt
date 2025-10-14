@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::get('/', [HomeController::class, 'welcome'])->name('welcome');
+Route::get('/tentang', [HomeController::class, 'tentang'])->name('tentang');
+Route::get('/kontak', [HomeController::class, 'kontak'])->name('kontak');
 
 Auth::routes();
 
