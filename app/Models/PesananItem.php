@@ -10,7 +10,7 @@ class PesananItem extends Model
     use HasFactory;
 
     protected $table = 'pesanan_item';
-    protected $fillable = ['pesanan_id', 'produk_id', 'warna', 'lengan', 'sablon_id', 'bahan', 'subtotal'];
+    protected $fillable = ['pesanan_id', 'produk_id', 'warna', 'lengan', 'sablon_id', 'bahan', 'subtotal', 'custom_sablon_url'];
 
     public function pesanan()
     {

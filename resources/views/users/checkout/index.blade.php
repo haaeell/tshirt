@@ -63,14 +63,34 @@
                                     <li
                                         class="list-group-item px-0 d-flex justify-content-between align-items-start border-bottom">
                                         <div>
-                                            <strong>{{ $item->produk->nama }}</strong>
-                                            <div class="small text-muted mt-1">
-                                                @if ($item->warna)
-                                                    <span class="badge bg-light text-dark">Warna: {{ $item->warna }}</span>
+                                            <div class="d-flex align-items-center gap-3">
+                                                @if ($item->custom_sablon_url)
+                                                    <div class="mt-2">
+                                                        <img src="{{ asset($item->custom_sablon_url) }}"
+                                                            class="rounded border"
+                                                            style="width:100px; height:100px; object-fit:contain;">
+                                                    </div>
+                                                @else
+                                                    <img src="{{ asset('storage/' . ($item->produk->mockup->first()->file_path ?? 'placeholder.png')) }}"
+                                                        class="rounded shadow-sm" width="70" height="70"
+                                                        style="object-fit:cover;" alt="">
                                                 @endif
-                                                @if ($item->bahan)
-                                                    <span class="badge bg-light text-dark">Bahan: {{ $item->bahan }}</span>
-                                                @endif
+                                                <div>
+                                                    <h6 class="fw-semibold mb-1">{{ $item->produk->nama }}</h6>
+                                                    <p class="text-muted small mb-0">
+                                                        {{ ucfirst($item->produk->jenis_produk) }}</p>
+                                                </div>
+
+                                                <div class="small text-muted mt-1">
+                                                    @if ($item->warna)
+                                                        <span class="badge bg-light text-dark">Warna:
+                                                            {{ $item->warna }}</span>
+                                                    @endif
+                                                    @if ($item->bahan)
+                                                        <span class="badge bg-light text-dark">Bahan:
+                                                            {{ $item->bahan }}</span>
+                                                    @endif
+                                                </div>
                                             </div>
                                             <ul class="list-unstyled small mt-2 mb-0">
                                                 @foreach ($item->details as $d)

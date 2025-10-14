@@ -118,6 +118,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('keranjang_item_id')->constrained('keranjang_item')->cascadeOnDelete();
             $table->string('ukuran');
+            $table->string('lengan', 20)->nullable()->after('ukuran');
             $table->integer('qty')->default(1);
             $table->decimal('harga_satuan', 12, 2);
             $table->decimal('subtotal', 12, 2);
@@ -152,6 +153,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('pesanan_item_id')->constrained('pesanan_item')->cascadeOnDelete();
             $table->string('ukuran');
+            $table->string('lengan', 20)->nullable()->after('ukuran');
             $table->integer('qty')->default(1);
             $table->decimal('harga_satuan', 12, 2);
             $table->decimal('subtotal', 12, 2);

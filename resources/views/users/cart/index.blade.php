@@ -28,9 +28,17 @@
                                         <!-- Produk -->
                                         <td style="min-width: 200px;">
                                             <div class="d-flex align-items-center gap-3">
-                                                <img src="{{ asset('storage/' . ($item->produk->mockup->first()->file_path ?? 'placeholder.png')) }}"
-                                                    class="rounded shadow-sm" width="70" height="70"
-                                                    style="object-fit:cover;" alt="">
+                                                @if ($item->custom_sablon_url)
+                                                    <div class="mt-2">
+                                                        <img src="{{ asset($item->custom_sablon_url) }}"
+                                                            class="rounded border"
+                                                            style="width:100px; height:100px; object-fit:contain;">
+                                                    </div>
+                                                @else
+                                                    <img src="{{ asset('storage/' . ($item->produk->mockup->first()->file_path ?? 'placeholder.png')) }}"
+                                                        class="rounded shadow-sm" width="70" height="70"
+                                                        style="object-fit:cover;" alt="">
+                                                @endif
                                                 <div>
                                                     <h6 class="fw-semibold mb-1">{{ $item->produk->nama }}</h6>
                                                     <p class="text-muted small mb-0">

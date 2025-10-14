@@ -374,16 +374,27 @@
                             <tr class="border-bottom">
                                 <!-- Produk -->
                                 <td class="align-middle">
-                                    <div class="d-flex align-items-center">
-                                        <img src="{{ asset('storage/' . ($g['produk']->image ?? 'placeholder.png')) }}"
-                                            class="rounded me-3 shadow-sm border"
-                                            style="width: 60px; height: 60px; object-fit: cover;">
-                                        <div>
-                                            <div class="fw-semibold">{{ $g['produk']->nama }}</div>
-                                            <small
-                                                class="text-muted">{{ ucfirst($g['produk']->jenis_produk ?? '-') }}</small>
+                                    @if ($item->custom_sablon_url)
+                                        <div class="mt-2">
+                                            <span class="badge bg-secondary mb-1">Desain Custom</span><br>
+                                            <img src="{{ asset($item->custom_sablon_url) }}" alt="Custom sablon"
+                                                class="rounded border"
+                                                style="width: 90px; height: 90px; object-fit: contain;">
                                         </div>
-                                    </div>
+                                    @else
+                                        <div class="d-flex align-items-center">
+                                            <img src="{{ asset('storage/' . optional($g['produk']->mockup->first())->file_path ?? 'placeholder.png') }}"
+                                                class="rounded me-3 shadow-sm border"
+                                                style="width: 60px; height: 60px; object-fit: cover;">
+
+                                            <div>
+                                                <div class="fw-semibold">{{ $g['produk']->nama }}</div>
+                                                <small
+                                                    class="text-muted">{{ ucfirst($g['produk']->jenis_produk ?? '-') }}</small>
+                                            </div>
+                                        </div>
+                                    @endif
+
                                 </td>
 
                                 <!-- Bahan -->

@@ -71,6 +71,7 @@ class OrderController extends Controller
                 'warna' => $item->warna,
                 'bahan' => $item->bahan,
                 'subtotal' => $item->subtotal,
+                'custom_sablon_url' => $item->custom_sablon_url,
             ]);
 
             foreach ($item->details as $d) {

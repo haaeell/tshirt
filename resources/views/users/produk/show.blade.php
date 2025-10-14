@@ -11,13 +11,14 @@
                     <div class="position-relative">
                         <div class="mockup-stage ratio ratio-1x1">
                             <div id="colorLayer" class="mockup-color"></div>
-
                             <img id="mockupImg"
                                 src="{{ asset('storage/' . ($produk->mockup->first()->file_path ?? 'placeholder.png')) }}"
-                                alt="{{ $produk->nama }}" class="mockup-img">
+                                alt="{{ $produk->nama }}" class="mockup-img"
+                                data-id="{{ $produk->mockup->first()->id ?? 1 }}">
+                            <canvas id="sablonCanvas" width="600" height="600"
+                                style="position:absolute; inset:0; z-index:5; width:100%; height:100%; cursor:move;"></canvas>
                         </div>
                     </div>
-
 
                     <!-- Thumbnail Carousel -->
                     <div class="d-flex overflow-auto gap-2 p-3 border-top bg-light rounded-bottom">
@@ -110,10 +111,18 @@
 
                 <!-- CUSTOM SABLON -->
                 <div class="mb-4">
-                    <button class="btn btn-outline-dark w-100 rounded-pill shadow-sm">
-                        <i class="fas fa-paint-brush me-2"></i> Tambah Custom Sablon
-                    </button>
+                    <div class="d-flex gap-2">
+                        <input type="file" id="uploadSablonInput" class="form-control" accept="image/*">
+                        <button id="resetCanvas" class="btn btn-outline-secondary flex-shrink-0">
+                            <i class="fas fa-undo me-1"></i> Reset
+                        </button>
+                    </div>
                 </div>
+
+                <button id="saveSablonBtn" class="btn btn-success w-100 rounded-pill shadow-sm">
+                    <i class="fas fa-save me-1"></i> Simpan Desain
+                </button>
+                <div id="previewContainer" class="mt-3"></div>
 
                 <!-- TOTAL -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -130,6 +139,7 @@
                         <input type="hidden" name="bahan" id="bahanHidden">
                         <input type="hidden" name="lengan" id="lenganHidden">
                         <input type="hidden" name="detail_json" id="detailJson">
+                        <input type="hidden" name="custom_sablon_data" id="customSablonData">
 
                         <button type="submit" class="btn btn-primary w-100 rounded-pill shadow-sm">
                             <i class="fas fa-cart-plus me-1"></i> Tambah ke Keranjang
@@ -175,33 +185,23 @@
             overflow: hidden;
             border-radius: 10px;
             background: #f8f9fa;
+            isolation: isolate;
         }
 
         .mockup-color {
-            position: absolute;
-            inset: 0;
-            z-index: 2;
-            background-color: #c9c9c9;
-            mix-blend-mode: multiply;
-            opacity: .95;
-            pointer-events: none;
-
-            -webkit-mask-size: contain;
-            -webkit-mask-repeat: no-repeat;
-            -webkit-mask-position: center;
-            mask-size: contain;
-            mask-repeat: no-repeat;
-            mask-position: center;
+            display: none;
+            /* sudah tidak dipakai */
         }
 
         .mockup-img {
             position: absolute;
             inset: 0;
-            z-index: 1;
+            z-index: 3;
             width: 100%;
             height: 100%;
             object-fit: contain;
             pointer-events: none;
+            filter: grayscale(1);
         }
 
 
@@ -233,27 +233,173 @@
             const colorLayer = document.getElementById('colorLayer');
             const mockupThumbs = document.querySelectorAll('.mockup-thumb');
             const mockupImg = document.getElementById('mockupImg');
-
             const bahanSelect = document.getElementById('bahanSelect');
             const qtyInputs = document.querySelectorAll('.qty-input');
             const totalHargaEl = document.getElementById('totalHarga');
-
             const warnaHidden = document.getElementById('warnaHidden');
             const bahanHidden = document.getElementById('bahanHidden');
             const lenganHidden = document.getElementById('lenganHidden');
             const detailJson = document.getElementById('detailJson');
             const cartForm = document.getElementById('cartForm');
-
             const basePrice = Number({{ $produk->harga }}) || 0;
 
-            // ====== THUMBNAIL → GANTI GAMBAR ======
-            mockupThumbs.forEach(img => {
-                img.addEventListener('click', () => {
-                    mockupThumbs.forEach(t => t.classList.remove('active'));
-                    img.classList.add('active');
-                    mockupImg.src = img.src; // <- pakai ID yang benar
-                });
+            // ===== CUSTOM SABLON LANGSUNG DI MOCKUP =====
+            const canvas = document.getElementById('sablonCanvas');
+            const ctx = canvas.getContext('2d');
+            let backgroundImg = null;
+            let uploadedImg = null;
+            let imgX = 150,
+                imgY = 150,
+                imgW = 200,
+                imgH = 200;
+            let dragging = false,
+                offsetX, offsetY;
+
+            const mockupImgEl = document.getElementById('mockupImg');
+            backgroundImg = new Image();
+            backgroundImg.crossOrigin = "anonymous";
+            backgroundImg.onload = () => redrawCanvas();
+            backgroundImg.src = mockupImgEl.src;
+
+            function redrawCanvas() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                if (!backgroundImg) return;
+
+                ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
+
+                const activeColor = document.querySelector('.color-option.active');
+                if (activeColor) {
+                    const hex = activeColor.dataset.hex || '#c9c9c9';
+
+                    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imgData.data;
+
+                    const r = parseInt(hex.substr(1, 2), 16);
+                    const g = parseInt(hex.substr(3, 2), 16);
+                    const b = parseInt(hex.substr(5, 2), 16);
+
+                    for (let i = 0; i < data.length; i += 4) {
+                        const alpha = data[i + 3];
+                        if (alpha > 30) {
+                            data[i] = (data[i] * 0.3 + r * 0.7);
+                            data[i + 1] = (data[i + 1] * 0.3 + g * 0.7);
+                            data[i + 2] = (data[i + 2] * 0.3 + b * 0.7);
+                        }
+                    }
+
+                    ctx.putImageData(imgData, 0, 0);
+                }
+
+                if (uploadedImg) ctx.drawImage(uploadedImg, imgX, imgY, imgW, imgH);
+            }
+
+            document.getElementById('uploadSablonInput').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const img = new Image();
+                img.onload = function() {
+                    uploadedImg = img;
+                    const scale = Math.min(canvas.width / img.width, canvas.height / img.height) * 0.5;
+                    imgW = img.width * scale;
+                    imgH = img.height * scale;
+                    imgX = (canvas.width - imgW) / 2;
+                    imgY = (canvas.height - imgH) / 2;
+                    redrawCanvas();
+                };
+                img.src = URL.createObjectURL(file);
             });
+
+            canvas.addEventListener('mousedown', (e) => {
+                if (!uploadedImg) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left,
+                    y = e.clientY - rect.top;
+                if (x >= imgX && x <= imgX + imgW && y >= imgY && y <= imgY + imgH) {
+                    dragging = true;
+                    offsetX = x - imgX;
+                    offsetY = y - imgY;
+                }
+            });
+            canvas.addEventListener('mousemove', (e) => {
+                if (!dragging) return;
+                const rect = canvas.getBoundingClientRect();
+                imgX = e.clientX - rect.left - offsetX;
+                imgY = e.clientY - rect.top - offsetY;
+                redrawCanvas();
+            });
+            canvas.addEventListener('mouseup', () => dragging = false);
+            canvas.addEventListener('mouseleave', () => dragging = false);
+
+            canvas.addEventListener('wheel', (e) => {
+                if (!uploadedImg) return;
+                e.preventDefault();
+                const scaleFactor = e.deltaY < 0 ? 1.05 : 0.95;
+                imgW *= scaleFactor;
+                imgH *= scaleFactor;
+                redrawCanvas();
+            });
+
+            document.getElementById('resetCanvas').addEventListener('click', () => {
+                uploadedImg = null;
+                redrawCanvas();
+            });
+
+            document.getElementById('saveSablonBtn').addEventListener('click', async () => {
+                if (!uploadedImg) {
+                    Swal.fire('Belum ada gambar sablon!', '', 'warning');
+                    return;
+                }
+
+                const imageData = canvas.toDataURL('image/png');
+                const mockupId = mockupImgEl.dataset.id || 1;
+                const pesananItemId = 1;
+                const csrf = document.querySelector('meta[name="csrf-token"]');
+                const csrfToken = csrf ? csrf.content : '{{ csrf_token() }}';
+
+                try {
+                    const response = await fetch('/custom-sablon/store', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({
+                            image_data: imageData,
+                            pesanan_item_id: pesananItemId,
+                            mockup_id: mockupId
+                        })
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Desain disimpan!',
+                            text: 'Preview berhasil dibuat.',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+
+                        const preview = document.createElement('img');
+                        preview.src = result.preview_url;
+                        preview.className = 'mt-3 rounded shadow-sm w-100';
+                        preview.style.objectFit = 'contain';
+                        const container = document.getElementById('previewContainer');
+                        container.innerHTML = '';
+                        container.appendChild(preview);
+
+                        document.getElementById('customSablonData').value = result.preview_url;
+                    } else {
+                        throw new Error('Gagal menyimpan sablon.');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    Swal.fire('Gagal menyimpan desain', err.message, 'error');
+                }
+            });
+
 
             const applyMaskFromImg = () => {
                 const src = mockupImg.src;
@@ -261,12 +407,12 @@
                 colorLayer.style.maskImage = `url('${src}')`;
             };
 
-            // ==== THUMBNAIL → GANTI GAMBAR & MASK ====
             mockupThumbs.forEach(img => {
                 img.addEventListener('click', () => {
                     mockupThumbs.forEach(t => t.classList.remove('active'));
                     img.classList.add('active');
                     mockupImg.src = img.src;
+                    backgroundImg.src = img.src;
                     applyMaskFromImg();
                 });
             });
@@ -277,12 +423,12 @@
                 el.addEventListener('click', () => {
                     colorOptions.forEach(c => c.classList.remove('active'));
                     el.classList.add('active');
-                    const hex = el.dataset.hex || '#c9c9c9';
-                    const name = el.dataset.nama || hex;
-                    colorLayer.style.backgroundColor = hex;
-                    warnaHidden.value = name;
+                    warnaHidden.value = el.dataset.nama || el.dataset.hex || '#c9c9c9';
+                    redrawCanvas(); // langsung update canvas
                 });
             });
+
+
 
             if (colorOptions.length) {
                 const first = colorOptions[0];
@@ -291,11 +437,12 @@
                 warnaHidden.value = first.dataset.nama || (first.dataset.hex || '#c9c9c9');
             }
 
+            // ===== TOTAL =====
             function updateTotal() {
                 const bahanHarga = parseFloat(bahanSelect.selectedOptions[0]?.dataset.harga || 0);
-                let total = 0;
-                let detail = [];
-                let lastLengan = ''; // ✅
+                let total = 0,
+                    detail = [],
+                    lastLengan = '';
 
                 qtyInputs.forEach(input => {
                     const qty = parseInt(input.value || 0);
@@ -311,26 +458,20 @@
                             harga_satuan: harga,
                             subtotal
                         });
-                        lastLengan = input.dataset.lengan; // ✅ simpan lengan terakhir yang dipakai
+                        lastLengan = input.dataset.lengan;
                     }
                 });
 
                 detailJson.value = JSON.stringify(detail);
                 totalHargaEl.textContent = 'Rp ' + total.toLocaleString('id-ID');
                 bahanHidden.value = bahanSelect.value;
-                document.getElementById('lenganHidden').value = lastLengan; // ✅ update hidden input
-
-                console.log('updateTotal() jalan:', {
-                    bahan: bahanHidden.value,
-                    lengan: lastLengan,
-                    detail_json: detailJson.value
-                });
+                lenganHidden.value = lastLengan;
             }
-
 
             bahanSelect.addEventListener('change', updateTotal);
             qtyInputs.forEach(i => i.addEventListener('input', updateTotal));
 
+            // ===== VALIDASI =====
             cartForm.addEventListener('submit', function(e) {
                 updateTotal();
 
@@ -339,35 +480,28 @@
                     Swal.fire({
                         icon: 'error',
                         title: 'Pilih Warna!',
-                        text: 'Silakan pilih warna produk terlebih dahulu.',
-                        confirmButtonColor: '#0d6efd'
+                        text: 'Silakan pilih warna produk dulu.'
                     });
                     return;
                 }
-
                 if (!bahanSelect.value) {
                     e.preventDefault();
                     Swal.fire({
                         icon: 'error',
                         title: 'Pilih Bahan!',
-                        text: 'Silakan pilih bahan sebelum melanjutkan.',
-                        confirmButtonColor: '#0d6efd'
+                        text: 'Silakan pilih bahan terlebih dulu.'
                     });
                     return;
                 }
-
                 const detail = JSON.parse(detailJson.value || '[]');
                 if (detail.length === 0) {
                     e.preventDefault();
                     Swal.fire({
                         icon: 'error',
                         title: 'Belum Ada Ukuran!',
-                        text: 'Masukkan jumlah minimal 1 pada ukuran tertentu.',
-                        confirmButtonColor: '#0d6efd'
+                        text: 'Masukkan minimal 1 qty.'
                     });
-                    return;
                 }
-
             });
         });
     </script>

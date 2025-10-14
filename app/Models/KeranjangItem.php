@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class KeranjangItem extends Model
 {
     protected $table = 'keranjang_item';
-    protected $fillable = ['keranjang_id', 'produk_id', 'warna', 'bahan', 'lengan', 'subtotal'];
+    protected $fillable = ['keranjang_id', 'produk_id', 'warna', 'bahan', 'lengan', 'subtotal', 'custom_sablon_url'];
 
     public function keranjang()
     {

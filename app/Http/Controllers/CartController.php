@@ -24,9 +24,6 @@ class CartController extends Controller
         return view('users.cart.index', compact('keranjang'));
     }
 
-    /**
-     * Tambah produk ke keranjang.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -37,31 +34,66 @@ class CartController extends Controller
         DB::beginTransaction();
         try {
             $userId = Auth::id();
-
             $keranjang = Keranjang::firstOrCreate(['user_id' => $userId]);
-
             $produk = Produk::findOrFail($request->produk_id);
-
             $details = json_decode($request->detail_json, true);
-            $subtotal = collect($details)->sum('subtotal');
+            $subtotalBaru = collect($details)->sum('subtotal');
 
-            $item = KeranjangItem::create([
-                'keranjang_id' => $keranjang->id,
-                'produk_id' => $produk->id,
-                'warna' => $request->warna,
-                'bahan' => $request->bahan,
-                'subtotal' => $subtotal,
-            ]);
+            $item = KeranjangItem::where('keranjang_id', $keranjang->id)
+                ->where('produk_id', $produk->id)
+                ->where('warna', $request->warna)
+                ->where('bahan', $request->bahan)
+                ->first();
 
-            foreach ($details as $d) {
-                KeranjangItemDetail::create([
-                    'keranjang_item_id' => $item->id,
-                    'ukuran' => $d['ukuran'],
-                    'qty' => $d['qty'],
-                    'harga_satuan' => $d['harga_satuan'],
-                    'subtotal' => $d['subtotal'],
-                    'lengan' => $d['lengan'],
+            if ($item) {
+                $item->subtotal += $subtotalBaru;
+                if ($request->filled('custom_sablon_data')) {
+                    $item->custom_sablon_url = $request->custom_sablon_data;
+                }
+
+                $item->save();
+
+                foreach ($details as $d) {
+                    $detail = KeranjangItemDetail::where('keranjang_item_id', $item->id)
+                        ->where('ukuran', $d['ukuran'])
+                        ->where('lengan', $d['lengan'])
+                        ->first();
+
+                    if ($detail) {
+                        $detail->qty += $d['qty'];
+                        $detail->subtotal += $d['subtotal'];
+                        $detail->save();
+                    } else {
+                        KeranjangItemDetail::create([
+                            'keranjang_item_id' => $item->id,
+                            'ukuran' => $d['ukuran'],
+                            'qty' => $d['qty'],
+                            'harga_satuan' => $d['harga_satuan'],
+                            'subtotal' => $d['subtotal'],
+                            'lengan' => $d['lengan'],
+                        ]);
+                    }
+                }
+            } else {
+                $item = KeranjangItem::create([
+                    'keranjang_id' => $keranjang->id,
+                    'produk_id' => $produk->id,
+                    'warna' => $request->warna,
+                    'bahan' => $request->bahan,
+                    'subtotal' => $subtotalBaru,
+                    'custom_sablon_url' => $request->custom_sablon_data,
                 ]);
+
+                foreach ($details as $d) {
+                    KeranjangItemDetail::create([
+                        'keranjang_item_id' => $item->id,
+                        'ukuran' => $d['ukuran'],
+                        'qty' => $d['qty'],
+                        'harga_satuan' => $d['harga_satuan'],
+                        'subtotal' => $d['subtotal'],
+                        'lengan' => $d['lengan'],
+                    ]);
+                }
             }
 
             DB::commit();
