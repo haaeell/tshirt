@@ -111,6 +111,8 @@ return new class extends Migration {
             $table->string('lengan')->nullable();
             $table->string('bahan')->nullable();
             $table->decimal('subtotal', 12, 2)->default(0);
+            $table->string('custom_sablon_url')->nullable();
+            $table->string('rincian_tambahan')->nullable();
             $table->timestamps();
         });
 
@@ -146,6 +148,8 @@ return new class extends Migration {
             $table->string('lengan')->nullable();
             $table->string('bahan')->nullable();
             $table->decimal('subtotal', 12, 2)->default(0);
+            $table->string('custom_sablon_url')->nullable();
+            $table->string('rincian_tambahan')->nullable();
             $table->timestamps();
         });
 

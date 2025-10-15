@@ -18,6 +18,7 @@
                                     <th>Produk</th>
                                     <th>Varian</th>
                                     <th>Detail Ukuran</th>
+                                    <th>Biaya Tambahan</th>
                                     <th class="text-end">Subtotal</th>
                                     <th class="text-center">Aksi</th>
                                 </tr>
@@ -90,6 +91,47 @@
                                                 </table>
                                             </div>
                                         </td>
+                                        @php
+                                            $tambahan = is_string($item->rincian_tambahan)
+                                                ? json_decode($item->rincian_tambahan, true)
+                                                : $item->rincian_tambahan;
+                                        @endphp
+                                        <td>
+                                            @if ($tambahan)
+                                                <div class="mt-3">
+                                                    <h6 class="fw-semibold mb-2 text-secondary">🧾 Rincian Biaya Tambahan:
+                                                    </h6>
+                                                    <div class="p-2 border rounded bg-light-subtle">
+                                                        <ul class="small mb-0">
+                                                            @if (!empty($tambahan['bahan']['nama']))
+                                                                <li>
+                                                                    <strong>Bahan:</strong>
+                                                                    {{ $tambahan['bahan']['nama'] }}
+                                                                    (+Rp
+                                                                    {{ number_format($tambahan['bahan']['total'] ?? 0, 0, ',', '.') }})
+                                                                </li>
+                                                            @endif
+
+                                                            @if (!empty($tambahan['sablon']))
+                                                                <li class="mt-1">
+                                                                    <strong>Sablon:</strong>
+                                                                    <ul class="mb-0 ps-3">
+                                                                        @foreach ($tambahan['sablon'] as $s)
+                                                                            <li>{{ $s['type'] }} {{ $s['sizeLabel'] }}
+                                                                                (+Rp
+                                                                                {{ number_format($s['cost'], 0, ',', '.') }})
+                                                                            </li>
+                                                                        @endforeach
+                                                                    </ul>
+                                                                </li>
+                                                            @endif
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </td>
+
+
 
                                         <!-- Subtotal -->
                                         <td class="text-end fw-bold text-primary">

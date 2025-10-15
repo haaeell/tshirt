@@ -190,6 +190,8 @@
                         <input type="hidden" name="lengan" id="lenganHidden">
                         <input type="hidden" name="detail_json" id="detailJson">
                         <input type="hidden" name="custom_sablon_data" id="customSablonData">
+                        <input type="hidden" name="biaya_tambahan_total" id="biayaTambahanTotal">
+                        <input type="hidden" name="rincian_tambahan" id="rincianTambahan">
 
                         <button type="submit" class="btn btn-primary w-100 rounded-pill shadow-sm">
                             <i class="fas fa-cart-plus me-1"></i> Tambah ke Keranjang
@@ -291,6 +293,97 @@
             const bahanSelect = document.getElementById('bahanSelect');
             const qtyInputs = document.querySelectorAll('.qty-input');
             const totalHargaEl = document.getElementById('totalHarga');
+
+            // ===== BOX INFORMASI BIAYA TAMBAHAN =====
+            const tambahanInfoEl = document.createElement('div');
+            tambahanInfoEl.className = 'p-2 mt-3 mb-3 border rounded bg-light small';
+            tambahanInfoEl.innerHTML = `<strong>Biaya Tambahan:</strong> <span class="text-muted">Belum ada</span>`;
+            document.querySelector('.d-flex.justify-content-between.align-items-center.mb-3')
+                .insertAdjacentElement('beforebegin', tambahanInfoEl);
+
+            function updateTambahanInfo(bahanHarga, bahanNama, sablonCost, sablonBreakdown, detail) {
+                let html = `
+    <strong>Rincian Biaya Tambahan:</strong>
+    <div class="mt-2">
+        <table class="table table-sm table-borderless mb-0">
+            <tbody>
+    `;
+                let totalTambahan = 0;
+                const totalQty = detail.reduce((sum, d) => sum + d.qty, 0);
+
+                if (bahanHarga > 0 && bahanNama && totalQty > 0) {
+                    const bahanTotal = bahanHarga * totalQty;
+                    html += `
+            <tr>
+                <td class="text-muted small">Bahan:</td>
+                <td>${bahanNama} × ${totalQty} pcs</td>
+                <td class="text-end text-primary fw-semibold">+Rp ${bahanTotal.toLocaleString('id-ID')}</td>
+            </tr>`;
+                    totalTambahan += bahanTotal;
+                }
+
+                const kombinasi = {};
+                detail.forEach(d => {
+                    const tambahan = d.harga_satuan;
+                    if (tambahan > 0) {
+                        const key = `${d.ukuran}-${d.lengan}`;
+                        if (!kombinasi[key]) kombinasi[key] = {
+                            ukuran: d.ukuran,
+                            lengan: d.lengan,
+                            tambahan: 0,
+                            qty: 0,
+                            perItem: tambahan
+                        };
+                        kombinasi[key].tambahan += tambahan * d.qty;
+                        kombinasi[key].qty += d.qty;
+                    }
+                });
+
+                Object.values(kombinasi).forEach(k => {
+                    const hargaDasar = basePrice + bahanHarga;
+                    html += `
+    <tr>
+      <td></td>
+      <td>Ukuran ${k.ukuran} (${k.lengan}) × ${k.qty} pcs @Rp ${k.perItem.toLocaleString('id-ID')}
+          <br><small class="text-muted">(Base Rp ${hargaDasar.toLocaleString('id-ID')})</small></td>
+      <td class="text-end text-primary">Rp ${(k.perItem * k.qty).toLocaleString('id-ID')}</td>
+    </tr>`;
+                    totalTambahan += k.perItem * k.qty;
+                });
+
+                if (sablonBreakdown.length > 0) {
+                    html += `
+            <tr><td colspan="3" class="pt-2 pb-0 fw-semibold">Custom Sablon:</td></tr>
+        `;
+                    sablonBreakdown.forEach((item, i) => {
+                        html += `
+                <tr>
+                    <td></td>
+                    <td>${i + 1}. ${item.type} ${item.sizeLabel}</td>
+                    <td class="text-end text-primary">+Rp ${item.cost.toLocaleString('id-ID')}</td>
+                </tr>`;
+                    });
+                    html += `
+            <tr>
+                <td></td>
+                <td class="fw-semibold">Subtotal sablon (${sablonBreakdown.length} item)</td>
+                <td class="text-end text-primary fw-semibold">+Rp ${sablonCost.toLocaleString('id-ID')}</td>
+            </tr>`;
+                    totalTambahan += sablonCost;
+                }
+
+                html += `
+           <tr class="border-top">
+  <td colspan="2" class="fw-bold pt-2">Total Keseluruhan</td>
+  <td class="text-end fw-bold text-primary pt-2">Rp ${totalTambahan.toLocaleString('id-ID')}</td>
+</tr>
+        </tbody>
+    </table>
+    </div>
+    `;
+                tambahanInfoEl.innerHTML = html;
+            }
+
             const warnaHidden = document.getElementById('warnaHidden');
             const bahanHidden = document.getElementById('bahanHidden');
             const lenganHidden = document.getElementById('lenganHidden');
@@ -382,32 +475,42 @@
             document.getElementById('addTextBtn').addEventListener('click', () => {
                 const text = document.getElementById('textInput').value.trim();
                 const font = document.getElementById('fontSelect').value;
-                if (!text) {
-                    Swal.fire('Tulis dulu teksnya!', '', 'warning');
-                    return;
-                }
+                if (!text) return Swal.fire('Tulis dulu teksnya!', '', 'warning');
+
+                const size = 32;
+                const cost = size > 50 ? 10000 : 5000;
+                const sizeLabel = size > 50 ? '(besar)' : '(kecil)';
+                sablonCost += cost;
+                sablonBreakdown.push({
+                    type: 'Teks',
+                    cost,
+                    sizeLabel
+                });
 
                 uploadedTexts.push({
                     text,
                     font,
                     x: canvas.width / 2,
                     y: canvas.height / 2,
-                    size: 32,
+                    size,
                     color: '#ffffff',
                     bold: false,
                     italic: false,
-                    align: 'center'
+                    align: 'center',
+                    cost
                 });
                 activeTextIndex = uploadedTexts.length - 1;
                 document.getElementById('textTools').classList.remove('d-none');
-                redrawCanvas();
 
+                updateSablonInfo();
+                redrawCanvas();
             });
 
             // tambah sablon baru
             document.getElementById('uploadSablonInput').addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
+
                 const img = new Image();
                 img.onload = function() {
                     const scale = Math.min(canvas.width / img.width, canvas.height / img.height) * 0.5;
@@ -415,14 +518,30 @@
                     const h = img.height * scale;
                     const x = (canvas.width - w) / 2;
                     const y = (canvas.height - h) / 2;
+
+                    // Hitung biaya sablon gambar
+                    const area = w * h;
+                    const threshold = (canvas.width * canvas.height) / 4;
+                    const cost = area > threshold ? 10000 : 5000;
+                    const sizeLabel = area > threshold ? '(besar)' : '(kecil)';
+                    sablonCost += cost;
+                    sablonBreakdown.push({
+                        type: 'Gambar',
+                        cost,
+                        sizeLabel
+                    });
+
                     uploadedImages.push({
                         img,
                         x,
                         y,
                         w,
-                        h
+                        h,
+                        cost
                     });
                     activeImageIndex = uploadedImages.length - 1;
+
+                    updateSablonInfo();
                     redrawCanvas();
                 };
                 img.src = URL.createObjectURL(file);
@@ -437,7 +556,6 @@
                     y = e.clientY - rect.top;
                 dragging = false;
 
-                // prioritas: teks dulu
                 for (let i = uploadedTexts.length - 1; i >= 0; i--) {
                     ctx.font = `${uploadedTexts[i].size}px ${uploadedTexts[i].font}`;
                     const width = ctx.measureText(uploadedTexts[i].text).width;
@@ -469,7 +587,6 @@
 
                 }
 
-                // lalu gambar sablon
                 for (let i = uploadedImages.length - 1; i >= 0; i--) {
                     const im = uploadedImages[i];
                     if (x >= im.x && x <= im.x + im.w && y >= im.y && y <= im.y + im.h) {
@@ -485,39 +602,79 @@
             });
 
             canvas.addEventListener('mousemove', (e) => {
-                if (!dragging) return;
                 const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left,
-                    y = e.clientY - rect.top;
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
 
-                if (dragging === 'image' && activeImageIndex >= 0) {
-                    const im = uploadedImages[activeImageIndex];
-                    im.x = x - offsetX;
-                    im.y = y - offsetY;
+                let hover = false;
+
+                for (let i = uploadedImages.length - 1; i >= 0; i--) {
+                    const im = uploadedImages[i];
+                    if (x >= im.x && x <= im.x + im.w && y >= im.y && y <= im.y + im.h) {
+                        hover = true;
+                        break;
+                    }
                 }
 
-                if (dragging === 'text' && activeTextIndex >= 0) {
-                    const tx = uploadedTexts[activeTextIndex];
-                    tx.x = x - offsetX;
-                    tx.y = y - offsetY;
+                if (!hover) {
+                    for (let i = uploadedTexts.length - 1; i >= 0; i--) {
+                        ctx.font = `${uploadedTexts[i].size}px ${uploadedTexts[i].font}`;
+                        const width = ctx.measureText(uploadedTexts[i].text).width;
+                        const height = uploadedTexts[i].size;
+                        if (x >= uploadedTexts[i].x - width / 2 && x <= uploadedTexts[i].x + width / 2 &&
+                            y >= uploadedTexts[i].y - height && y <= uploadedTexts[i].y) {
+                            hover = true;
+                            break;
+                        }
+                    }
                 }
 
-                redrawCanvas();
+                canvas.style.cursor = hover ? 'move' : 'default';
+
+                if (dragging) {
+                    if (dragging === 'image' && activeImageIndex >= 0) {
+                        const im = uploadedImages[activeImageIndex];
+                        im.x = x - offsetX;
+                        im.y = y - offsetY;
+                    }
+
+                    if (dragging === 'text' && activeTextIndex >= 0) {
+                        const tx = uploadedTexts[activeTextIndex];
+                        tx.x = x - offsetX;
+                        tx.y = y - offsetY;
+                    }
+
+                    redrawCanvas();
+                }
             });
+
 
             canvas.addEventListener('mouseup', () => dragging = false);
             canvas.addEventListener('mouseleave', () => dragging = false);
 
 
             canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+
+                // Zoom gambar aktif
+                if (activeImageIndex >= 0) {
+                    const imgObj = uploadedImages[activeImageIndex];
+                    const scale = e.deltaY < 0 ? 1.1 :
+                        0.9; // scroll ke atas = perbesar, ke bawah = perkecil
+                    imgObj.w = Math.max(30, Math.min(canvas.width, imgObj.w * scale));
+                    imgObj.h = Math.max(30, Math.min(canvas.height, imgObj.h * scale));
+                    redrawCanvas();
+                    return;
+                }
+
                 if (activeTextIndex >= 0) {
-                    e.preventDefault();
                     const txt = uploadedTexts[activeTextIndex];
                     const scale = e.deltaY < 0 ? 1.1 : 0.9;
                     txt.size = Math.max(10, Math.min(200, txt.size * scale));
                     redrawCanvas();
                 }
             });
+
 
             document.getElementById('resetCanvas').addEventListener('click', () => {
                 uploadedImages = [];
@@ -627,9 +784,17 @@
                 warnaHidden.value = first.dataset.nama || (first.dataset.hex || '#c9c9c9');
             }
 
+
+            let sablonCost = 0;
+            let sablonBreakdown = [];
+
+            const sablonInfoEl = document.createElement('div');
+            sablonInfoEl.className = 'p-2 mt-2 mb-3 border rounded bg-light small';
+
             // ===== TOTAL =====
             function updateTotal() {
                 const bahanHarga = parseFloat(bahanSelect.selectedOptions[0]?.dataset.harga || 0);
+                const bahanNama = bahanSelect.value || null;
                 let total = 0,
                     detail = [],
                     lastLengan = '';
@@ -638,7 +803,7 @@
                     const qty = parseInt(input.value || 0);
                     const hargaTambahan = parseFloat(input.dataset.harga);
                     if (qty > 0) {
-                        const harga = basePrice + bahanHarga + hargaTambahan;
+                        const harga = basePrice + hargaTambahan;
                         const subtotal = harga * qty;
                         total += subtotal;
                         detail.push({
@@ -652,11 +817,28 @@
                     }
                 });
 
-                detailJson.value = JSON.stringify(detail);
+                const totalQty = detail.reduce((sum, d) => sum + d.qty, 0);
+                const bahanTotal = bahanHarga * totalQty;
+
+                total += bahanTotal + sablonCost;
+
+                updateTambahanInfo(bahanHarga, bahanNama, sablonCost, sablonBreakdown, detail);
+
                 totalHargaEl.textContent = 'Rp ' + total.toLocaleString('id-ID');
+                detailJson.value = JSON.stringify(detail);
                 bahanHidden.value = bahanSelect.value;
                 lenganHidden.value = lastLengan;
+
+                document.getElementById('biayaTambahanTotal').value = (bahanTotal + sablonCost).toFixed(0);
+                document.getElementById('rincianTambahan').value = JSON.stringify({
+                    bahan: {
+                        nama: bahanNama,
+                        total: bahanTotal
+                    },
+                    sablon: sablonBreakdown,
+                });
             }
+
 
             bahanSelect.addEventListener('change', updateTotal);
             qtyInputs.forEach(i => i.addEventListener('input', updateTotal));

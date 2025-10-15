@@ -7,7 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class KeranjangItem extends Model
 {
     protected $table = 'keranjang_item';
-    protected $fillable = ['keranjang_id', 'produk_id', 'warna', 'bahan', 'lengan', 'subtotal', 'custom_sablon_url'];
+    protected $fillable = ['keranjang_id', 'produk_id', 'warna', 'bahan', 'lengan', 'subtotal', 'custom_sablon_url', 'rincian_tambahan'];
+    protected $casts = [
+        'rincian_tambahan' => 'array',
+    ];
 
     public function keranjang()
     {

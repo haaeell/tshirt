@@ -370,10 +370,21 @@
                             @php
                                 $totalQty = collect($g['details'])->sum('qty');
                                 $totalHarga = collect($g['details'])->sum('subtotal');
+
+                                // Ambil rincian tambahan dari item (jika ada)
+                                $item = $pesanan->items->firstWhere('produk_id', $g['produk']->id);
+                                $tambahan = is_string($item->rincian_tambahan)
+                                    ? json_decode($item->rincian_tambahan, true)
+                                    : $item->rincian_tambahan;
+
+                                $totalTambahan =
+                                    ($tambahan['bahan']['total'] ?? 0) +
+                                    collect($tambahan['sablon'] ?? [])->sum('cost');
                             @endphp
-                            <tr class="border-bottom">
+
+                            <tr class="border-bottom align-middle">
                                 <!-- Produk -->
-                                <td class="align-middle">
+                                <td>
                                     @if ($item->custom_sablon_url)
                                         <div class="mt-2">
                                             <span class="badge bg-secondary mb-1">Desain Custom</span><br>
@@ -386,7 +397,6 @@
                                             <img src="{{ asset('storage/' . optional($g['produk']->mockup->first())->file_path ?? 'placeholder.png') }}"
                                                 class="rounded me-3 shadow-sm border"
                                                 style="width: 60px; height: 60px; object-fit: cover;">
-
                                             <div>
                                                 <div class="fw-semibold">{{ $g['produk']->nama }}</div>
                                                 <small
@@ -394,25 +404,24 @@
                                             </div>
                                         </div>
                                     @endif
-
                                 </td>
 
                                 <!-- Bahan -->
-                                <td class="text-center align-middle">
+                                <td class="text-center">
                                     <span class="badge bg-info bg-opacity-10 text-dark px-3 py-2 rounded-pill">
                                         {{ $g['bahan'] }}
                                     </span>
                                 </td>
 
                                 <!-- Warna -->
-                                <td class="text-center align-middle">
+                                <td class="text-center">
                                     <span class="badge bg-light text-dark px-3 py-2 rounded-pill border">
                                         {{ $g['warna'] }}
                                     </span>
                                 </td>
 
                                 <!-- Varian -->
-                                <td class="align-middle">
+                                <td>
                                     <div class="table-responsive rounded-3 border bg-light-subtle">
                                         <table class="table table-sm mb-0 text-center align-middle small">
                                             <thead class="bg-white fw-semibold">
@@ -439,17 +448,48 @@
                                             </tbody>
                                         </table>
                                     </div>
+
+                                    {{-- 🔹 Tambahan biaya (bahan + sablon) --}}
+                                    @if ($tambahan)
+                                        <div class="mt-2 small text-muted">
+                                            <strong>🧾 Rincian Tambahan:</strong>
+                                            <ul class="mb-0 ps-3">
+                                                @if (!empty($tambahan['bahan']['nama']))
+                                                    <li>
+                                                        Bahan: {{ $tambahan['bahan']['nama'] }}
+                                                        (+Rp
+                                                        {{ number_format($tambahan['bahan']['total'] ?? 0, 0, ',', '.') }})
+                                                    </li>
+                                                @endif
+                                                @if (!empty($tambahan['sablon']))
+                                                    <li>Sablon:</li>
+                                                    <ul class="mb-0 ps-3">
+                                                        @foreach ($tambahan['sablon'] as $s)
+                                                            <li>
+                                                                {{ $s['type'] ?? '-' }} {{ $s['sizeLabel'] ?? '' }}
+                                                                (+Rp {{ number_format($s['cost'] ?? 0, 0, ',', '.') }})
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                @endif
+                                            </ul>
+
+                                            <div class="text-success mt-1">
+                                                <strong>Total Tambahan:</strong>
+                                                +Rp {{ number_format($totalTambahan, 0, ',', '.') }}
+                                            </div>
+                                        </div>
+                                    @endif
                                 </td>
 
-                                <td class="text-center fw-semibold align-middle">
-                                    {{ $totalQty }}
-                                </td>
+                                <td class="text-center fw-semibold">{{ $totalQty }}</td>
 
-                                <td class="text-end fw-bold text-primary align-middle">
-                                    Rp {{ number_format($totalHarga, 0, ',', '.') }}
+                                <td class="text-end fw-bold text-primary">
+                                    Rp {{ number_format($totalHarga + $totalTambahan, 0, ',', '.') }}
                                 </td>
                             </tr>
                         @endforeach
+
                     </tbody>
                 </table>
             </div>
