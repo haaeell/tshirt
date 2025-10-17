@@ -10,7 +10,7 @@ class UlasanProduk extends Model
     use HasFactory;
 
     protected $table = 'ulasan_produk';
-    protected $fillable = ['pesanan_item_id', 'produk_id', 'user_id', 'rating', 'komentar'];
+    protected $fillable = ['pesanan_item_id', 'pesanan_id', 'produk_id', 'user_id', 'rating', 'komentar'];
 
     public function produk()
     {

@@ -253,66 +253,71 @@
                     <i class="fas fa-star text-warning me-2"></i> Beri Ulasan Produk
                 </div>
                 <div class="card-body">
-                    @foreach ($pesanan->items as $item)
-                        @foreach ($item->details as $detail)
-                            @php
-                                $produk = $item->produk;
-                                $existingReview = $produk
-                                    ->ulasan()
-                                    ->where('user_id', auth()->id())
-                                    ->where('pesanan_item_id', $item->id)
-                                    ->first();
-                            @endphp
+                    @php
+                        $produkUnik = $pesanan->items->groupBy('produk_id');
+                    @endphp
 
-                            <div class="border rounded-4 p-3 mb-4 shadow-sm">
-                                <div class="d-flex align-items-center mb-3">
-                                    <img src="{{ asset('storage/' . ($produk->image ?? 'default.jpg')) }}"
-                                        class="rounded me-3" style="width:60px;height:60px;object-fit:cover;">
-                                    <div>
-                                        <h6 class="fw-semibold mb-0">{{ $produk->nama }}</h6>
-                                        <small class="text-muted">Qty: {{ $detail->qty }}</small>
-                                    </div>
+                    @foreach ($produkUnik as $produkId => $group)
+                        @php
+                            $produk = $group->first()->produk;
+                            $totalQty = $group->sum(fn($i) => $i->details->sum('qty'));
+
+                            $existingReview = $produk
+                                ->ulasan()
+                                ->where('user_id', auth()->id())
+                                ->where('pesanan_id', $pesanan->id)
+                                ->first();
+                        @endphp
+
+                        <div class="border rounded-4 p-3 mb-4 shadow-sm">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="{{ asset('storage/' . optional($produk->mockup->first())->file_path ?? 'placeholder.png') }}"
+                                    class="rounded me-3 shadow-sm border"
+                                    style="width: 60px; height: 60px; object-fit: cover;">
+                                <div>
+                                    <h6 class="fw-semibold mb-0">{{ $produk->nama }}</h6>
+                                    <small class="text-muted">Qty: {{ $totalQty }}</small>
                                 </div>
+                            </div>
 
-                                @if ($existingReview)
-                                    <div class="bg-light p-3 rounded-3">
-                                        <div class="text-warning mb-1">
+                            @if ($existingReview)
+                                <div class="bg-light p-3 rounded-3">
+                                    <div class="text-warning mb-1">
+                                        @for ($i = 1; $i <= 5; $i++)
+                                            <i class="fas fa-star{{ $i <= $existingReview->rating ? '' : '-o' }}"></i>
+                                        @endfor
+                                    </div>
+                                    <p class="mb-0">{{ $existingReview->komentar ?? 'Tidak ada komentar.' }}</p>
+                                    <small class="text-muted">
+                                        Ulasan Anda • {{ $existingReview->created_at->diffForHumans() }}
+                                    </small>
+                                </div>
+                            @else
+                                <form action="{{ route('users.orders.reviewProduk', $produk->id) }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="pesanan_id" value="{{ $pesanan->id }}">
+                                    <div class="mb-2">
+                                        <div class="star-rating fs-4 text-warning" data-produk="{{ $produk->id }}">
                                             @for ($i = 1; $i <= 5; $i++)
-                                                <i class="fas fa-star{{ $i <= $existingReview->rating ? '' : '-o' }}"></i>
+                                                <input type="radio" class="d-none" name="rating[{{ $produk->id }}]"
+                                                    id="rating-{{ $produk->id }}-{{ $i }}"
+                                                    value="{{ $i }}">
+                                                <label for="rating-{{ $produk->id }}-{{ $i }}" class="me-1"
+                                                    style="cursor:pointer;">★</label>
                                             @endfor
                                         </div>
-                                        <p class="mb-0">{{ $existingReview->komentar ?? 'Tidak ada komentar.' }}</p>
-                                        <small class="text-muted">Ulasan Anda •
-                                            {{ $existingReview->created_at->diffForHumans() }}</small>
                                     </div>
-                                @else
-                                    <form action="{{ route('users.orders.reviewProduk', $item->id) }}" method="POST"
-                                        class="mt-2">
-                                        @csrf
-                                        <div class="mb-2">
-                                            <div class="star-rating fs-4 text-warning" data-item="{{ $item->id }}">
-                                                @for ($i = 1; $i <= 5; $i++)
-                                                    <input type="radio" class="d-none" name="rating[{{ $item->id }}]"
-                                                        id="rating-{{ $item->id }}-{{ $i }}"
-                                                        value="{{ $i }}">
-                                                    <label for="rating-{{ $item->id }}-{{ $i }}"
-                                                        class="me-1" style="cursor:pointer;">★</label>
-                                                @endfor
-                                            </div>
-                                        </div>
-
-                                        <div class="mb-2">
-                                            <textarea name="komentar" rows="2" class="form-control form-control-sm" placeholder="Tulis ulasan Anda..."></textarea>
-                                        </div>
-                                        <input type="hidden" name="produk_id" value="{{ $produk->id }}">
-                                        <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3">
-                                            <i class="fas fa-paper-plane me-1"></i> Kirim Ulasan
-                                        </button>
-                                    </form>
-                                @endif
-                            </div>
-                        @endforeach
+                                    <div class="mb-2">
+                                        <textarea name="komentar" rows="2" class="form-control form-control-sm" placeholder="Tulis ulasan Anda..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3">
+                                        <i class="fas fa-paper-plane me-1"></i> Kirim Ulasan
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
                     @endforeach
+
                 </div>
             </div>
         @endif

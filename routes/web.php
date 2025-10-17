@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\UlasanController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ChatController;
@@ -42,6 +43,8 @@ Route::prefix('admin')->middleware('auth')->group(function () {
     Route::post('pesanan/{id}/resi', [PesananController::class, 'updateResi'])->name('admin.pesanan.updateResi');
 
 
+
+    Route::get('/ulasan', [UlasanController::class, 'index'])->name('admin.ulasan.index');
 
     Route::prefix('produk')->group(function () {
         Route::get('varian', [ProdukVarianController::class, 'index'])->name('produk.varian');

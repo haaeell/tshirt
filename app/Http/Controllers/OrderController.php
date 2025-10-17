@@ -7,6 +7,7 @@ use App\Models\Keranjang;
 use App\Models\Pesanan;
 use App\Models\PesananItem;
 use App\Models\PesananItemDetail;
+use App\Models\Produk;
 use App\Models\UlasanProduk;
 use App\Models\Voucher;
 use Illuminate\Http\Request;
@@ -175,26 +176,25 @@ class OrderController extends Controller
         return back()->with('success', 'Status pesanan berhasil diperbarui.');
     }
 
-    public function reviewProduk(Request $request, $itemId)
+    public function reviewProduk(Request $request, $produkId)
     {
         $request->validate([
-            'produk_id' => 'required|exists:produk,id',
-            "rating.$itemId" => 'required|integer|min:1|max:5',
+            'pesanan_id' => 'required|exists:pesanan,id',
+            "rating.$produkId" => 'required|integer|min:1|max:5',
             'komentar' => 'nullable|string|max:1000',
         ]);
 
         $userId = Auth::id();
-        $produkId = $request->produk_id;
-        $rating = $request->input("rating.$itemId");
-        $komentar = $request->komentar;
+        $pesanan = Pesanan::findOrFail($request->pesanan_id);
+        $produk = Produk::findOrFail($produkId);
 
-        $item = PesananItem::findOrFail($itemId);
-        if ($item->pesanan->user_id !== $userId) {
-            abort(403, 'Tidak diizinkan memberi ulasan untuk pesanan ini.');
+        if ($pesanan->user_id !== $userId) {
+            abort(403, 'Anda tidak diizinkan memberi ulasan untuk pesanan ini.');
         }
 
-        $existing = UlasanProduk::where('pesanan_item_id', $itemId)
+        $existing = UlasanProduk::where('produk_id', $produkId)
             ->where('user_id', $userId)
+            ->where('pesanan_id', $pesanan->id)
             ->first();
 
         if ($existing) {
@@ -202,11 +202,11 @@ class OrderController extends Controller
         }
 
         UlasanProduk::create([
-            'pesanan_item_id' => $itemId,
+            'pesanan_id' => $pesanan->id,
             'produk_id' => $produkId,
             'user_id' => $userId,
-            'rating' => $rating,
-            'komentar' => $komentar,
+            'rating' => $request->input("rating.$produkId"),
+            'komentar' => $request->komentar,
         ]);
 
         return back()->with('success', 'Terima kasih! Ulasan Anda telah dikirim.');
