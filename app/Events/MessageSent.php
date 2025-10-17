@@ -3,36 +3,35 @@
 namespace App\Events;
 
 use App\Models\Chat;
-use Illuminate\Broadcasting\Channel;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 
-class MessageSent implements ShouldBroadcast, ShouldQueue
+class MessageSent implements ShouldBroadcastNow
 {
-    use SerializesModels;
+    public function __construct(public Chat $chat) {}
 
-    public $chat;
-
-    public function __construct(Chat $chat)
+    public function broadcastOn(): array
     {
-        $this->chat = $chat;
+        return [
+            new PrivateChannel('chat.' . $this->chat->receiver_id),
+            new PrivateChannel('chat.' . $this->chat->sender_id),
+        ];
     }
 
-    public function broadcastOn(): Channel
+    public function broadcastAs(): string
     {
-        return new PrivateChannel('chat.' . $this->chat->receiver_id);
+        return 'message.sent';
     }
 
     public function broadcastWith(): array
     {
         return [
-            'id' => $this->chat->id,
-            'message' => $this->chat->message,
-            'sender_id' => $this->chat->sender_id,
+            'id'          => $this->chat->id,
+            'sender_id'   => $this->chat->sender_id,
             'receiver_id' => $this->chat->receiver_id,
-            'created_at' => $this->chat->created_at->diffForHumans(),
+            'message'     => $this->chat->message,
+            'is_read'     => (bool)$this->chat->is_read,
+            'created_at'  => $this->chat->created_at->toISOString(),
         ];
     }
 }

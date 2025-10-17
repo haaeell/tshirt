@@ -112,12 +112,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/laporan/penjualan', [LaporanPenjualanController::class, 'index'])->name('laporan.penjualan');
     Route::get('/laporan/penjualan/data', [LaporanPenjualanController::class, 'data'])->name('laporan.penjualan.data');
 
-    Route::get('/chat/{receiverId}', [ChatController::class, 'index'])->name('chat.index');
+    Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
+    Route::get('/chat/fetch/{user}', [ChatController::class, 'fetch'])->name('chat.fetch');
     Route::post('/chat/send', [ChatController::class, 'send'])->name('chat.send');
+    Route::post('/chat/ping', [ChatController::class, 'pingOnline'])->name('chat.ping');
+
     Route::post('/chat/typing', [ChatController::class, 'typing'])->name('chat.typing');
-
-    // khusus admin
-    Route::get('/admin/chat', [ChatController::class, 'admin'])->name('admin.chat');
-
-    Route::get('/chat/{receiverId}', [ChatController::class, 'getHistory']);
+    Route::post('/chat/stop-typing', [ChatController::class, 'stopTyping'])->name('chat.stopTyping');
+    Route::post('/chat/read/{user}', [ChatController::class, 'markAsRead'])->name('chat.read');
 });

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.homepage')
 @section('title', 'Chat Realtime')
 
 @section('content')
@@ -172,82 +172,88 @@
         }
     </style>
 
-    <div class="container-fluid py-4">
-        <div class="chat-container row g-0">
-            <!-- Sidebar -->
-            <div class="col-md-4 chat-sidebar p-3">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-chat-dots text-primary me-2"></i>Pesan</h5>
-                </div>
+    <div class="container">
+        <div class="row d-flex justify-content-center">
+            <div class="col-lg-8 col-md-12">
+                <div class="chat-container row g-0">
+                    <!-- Sidebar -->
+                    <div class="col-md-4 chat-sidebar p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-chat-dots text-primary me-2"></i>Pesan</h5>
+                        </div>
 
-                @if ($auth->role === 'admin')
-                    <div class="input-group mb-3">
-                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                        <input type="text" id="search-user" class="form-control border-start-0 search-input"
-                            placeholder="Cari pengguna...">
+                        @if ($auth->role === 'admin')
+                            <div class="input-group mb-3">
+                                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                                <input type="text" id="search-user" class="form-control border-start-0 search-input"
+                                    placeholder="Cari pengguna...">
+                            </div>
+                        @endif
+
+                        <ul class="list-group" id="user-list">
+                            @foreach ($users as $u)
+                                <li class="list-group-item d-flex align-items-center justify-content-between user-item"
+                                    data-id="{{ $u->id }}" data-name="{{ strtolower($u->nama ?? $u->name) }}">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="user-avatar">
+                                            <i class="bi bi-person-circle text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">{{ $u->nama ?? $u->name }}</div>
+                                            <small class="text-muted">{{ ucfirst($u->role) }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge rounded-pill bg-secondary unread-{{ $u->id }}"
+                                            style="display:none">0</span>
+                                        <span class="status-dot status-dot-{{ $u->id }}"
+                                            style="background:#ccc"></span>
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                        <p id="no-user" class="text-center text-muted small mt-2" style="display:none;">Tidak ada pengguna
+                            ditemukan</p>
                     </div>
-                @endif
 
-                <ul class="list-group" id="user-list">
-                    @foreach ($users as $u)
-                        <li class="list-group-item d-flex align-items-center justify-content-between user-item"
-                            data-id="{{ $u->id }}" data-name="{{ strtolower($u->nama ?? $u->name) }}">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="user-avatar">
-                                    <i class="bi bi-person-circle text-primary"></i>
-                                </div>
-                                <div>
-                                    <div class="fw-semibold">{{ $u->nama ?? $u->name }}</div>
-                                    <small class="text-muted">{{ ucfirst($u->role) }}</small>
+                    <!-- Chat Window -->
+                    <div class="col-md-8 d-flex flex-column">
+                        <div class="chat-header d-flex justify-content-between align-items-center">
+                            <span id="chat-title">Pilih pengguna</span>
+                            <small class="opacity-75"><i class="bi bi-shield-lock"></i></small>
+                        </div>
+
+                        <div class="chat-body flex-grow-1" id="chat-box">
+                            <div class="text-muted small text-center mt-5">💬 Belum ada percakapan.</div>
+                        </div>
+                        <div id="typing-indicator" class="text-muted small ps-3 py-1" style="display:none;">
+                            <i class="bi bi-pencil"></i> Sedang mengetik...
+                        </div>
+
+                        <div class="chat-footer">
+                            <form id="chat-form" class="d-flex gap-2" enctype="multipart/form-data">
+                                @csrf
+                                <input type="hidden" id="receiver_id">
+                                <label for="chat-file"
+                                    class="btn btn-light border rounded-circle d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-paperclip"></i>
+                                </label>
+                                <input type="file" id="chat-file" style="display:none;">
+                                <input type="text" id="chat-input" class="form-control rounded-pill"
+                                    placeholder="Ketik pesan..." disabled>
+                                <button class="btn btn-primary rounded-circle px-3" id="btn-send" disabled>
+                                    <i class="bi bi-send-fill"></i>
+                                </button>
+                            </form>
+                            <div id="file-preview" class="mt-2 px-2" style="display:none;">
+                                <div class="border rounded p-2 d-flex align-items-center justify-content-between bg-light">
+                                    <div id="file-preview-content" class="d-flex align-items-center gap-2"></div>
+                                    <button type="button" id="remove-preview"
+                                        class="btn btn-sm btn-outline-danger rounded-circle">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="text-end">
-                                <span class="badge rounded-pill bg-secondary unread-{{ $u->id }}"
-                                    style="display:none">0</span>
-                                <span class="status-dot status-dot-{{ $u->id }}" style="background:#ccc"></span>
-                            </div>
-                        </li>
-                    @endforeach
-                </ul>
-                <p id="no-user" class="text-center text-muted small mt-2" style="display:none;">Tidak ada pengguna
-                    ditemukan</p>
-            </div>
-
-            <!-- Chat Window -->
-            <div class="col-md-8 d-flex flex-column">
-                <div class="chat-header d-flex justify-content-between align-items-center">
-                    <span id="chat-title">Pilih pengguna</span>
-                    <small class="opacity-75"><i class="bi bi-shield-lock"></i> Realtime Secure</small>
-                </div>
-
-                <div class="chat-body flex-grow-1" id="chat-box">
-                    <div class="text-muted small text-center mt-5">💬 Belum ada percakapan.</div>
-                </div>
-                <div id="typing-indicator" class="text-muted small ps-3 py-1" style="display:none;">
-                    <i class="bi bi-pencil"></i> Sedang mengetik...
-                </div>
-
-                <div class="chat-footer">
-                    <form id="chat-form" class="d-flex gap-2" enctype="multipart/form-data">
-                        @csrf
-                        <input type="hidden" id="receiver_id">
-                        <label for="chat-file"
-                            class="btn btn-light border rounded-circle d-flex align-items-center justify-content-center">
-                            <i class="bi bi-paperclip"></i>
-                        </label>
-                        <input type="file" id="chat-file" style="display:none;">
-                        <input type="text" id="chat-input" class="form-control rounded-pill" placeholder="Ketik pesan..."
-                            disabled>
-                        <button class="btn btn-primary rounded-circle px-3" id="btn-send" disabled>
-                            <i class="bi bi-send-fill"></i>
-                        </button>
-                    </form>
-                    <div id="file-preview" class="mt-2 px-2" style="display:none;">
-                        <div class="border rounded p-2 d-flex align-items-center justify-content-between bg-light">
-                            <div id="file-preview-content" class="d-flex align-items-center gap-2"></div>
-                            <button type="button" id="remove-preview" class="btn btn-sm btn-outline-danger rounded-circle">
-                                <i class="bi bi-x-lg"></i>
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -264,6 +270,8 @@
     <script>
         $(document).ready(function() {
             const authId = {{ (int) $auth->id }};
+            const adminId = {{ (int) ($admin->id ?? 0) }};
+
             let activeUserId = null;
             const csrf = $('meta[name="csrf-token"]').attr('content');
 
@@ -548,6 +556,12 @@
                 $('#file-preview').slideUp(150);
             });
 
+            if ("{{ $auth->role }}" === "customer" && adminId) {
+                openChat(adminId);
+                $('.chat-sidebar').hide();
+                $('.col-md-8').removeClass('col-md-8').addClass('col-12');
+                $('#chat-title').text('Chat dengan Admin');
+            }
 
             // === KEEP ONLINE ===
             setInterval(() => axios.post("{{ route('chat.ping') }}"), 60000);

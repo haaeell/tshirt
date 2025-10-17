@@ -42,7 +42,7 @@
         </li>
 
         <li class="nav-item">
-            <a class="nav-link" href="{{ route('admin.chat') }}">
+            <a class="nav-link" href="{{ route('chat.index') }}">
                 <i class="fas fa-comments menu-icon"></i>
                 <span class="menu-title">Chat Pelanggan</span>
             </a>
