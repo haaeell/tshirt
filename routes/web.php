@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CustomSablonController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LaporanPenjualanController;
@@ -110,4 +111,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/laporan/penjualan', [LaporanPenjualanController::class, 'index'])->name('laporan.penjualan');
     Route::get('/laporan/penjualan/data', [LaporanPenjualanController::class, 'data'])->name('laporan.penjualan.data');
+
+    Route::get('/chat/{receiverId}', [ChatController::class, 'index'])->name('chat.index');
+    Route::post('/chat/send', [ChatController::class, 'send'])->name('chat.send');
+    Route::post('/chat/typing', [ChatController::class, 'typing'])->name('chat.typing');
+
+    // khusus admin
+    Route::get('/admin/chat', [ChatController::class, 'admin'])->name('admin.chat');
+
+    Route::get('/chat/{receiverId}', [ChatController::class, 'getHistory']);
 });

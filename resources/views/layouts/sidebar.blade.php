@@ -41,6 +41,13 @@
             </a>
         </li>
 
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('admin.chat') }}">
+                <i class="fas fa-comments menu-icon"></i>
+                <span class="menu-title">Chat Pelanggan</span>
+            </a>
+        </li>
+
         <!-- Voucher & Ulasan -->
         <li class="nav-item mt-3">
             <span class="text-uppercase fw-semibold text-muted small ps-2">Promosi & Ulasan</span>

@@ -303,6 +303,10 @@
         @yield('content')
     </main>
 
+    @if (Auth::check() && Auth::user()->role === 'customer')
+        @include('components.chat-widget')
+    @endif
+
     <!-- Footer -->
     <footer class="py-5 mt-5">
         <div class="container">
@@ -331,6 +335,26 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        });
+
+        $('#chat-btn').on('click', () => {
+            $('#chat-modal').modal('show');
+
+            $.get("{{ url('/chat') }}/1", function(data) {
+                chatBox.html('');
+                data.messages.forEach(msg => {
+                    const align = msg.sender_id == {{ Auth::id() }} ? 'chat-user ms-auto' :
+                        'chat-admin me-auto';
+                    chatBox.append(`<div class="chat-bubble ${align}">${msg.message}</div>`);
+                });
+                chatBox.scrollTop(chatBox[0].scrollHeight);
+            });
+        });
+
         window.addEventListener('scroll', () => {
             const navbar = document.querySelector('.navbar');
             navbar.classList.toggle('scrolled', window.scrollY > 20);
