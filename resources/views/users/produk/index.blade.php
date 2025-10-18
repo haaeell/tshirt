@@ -10,8 +10,8 @@
             <div class="col-md-3 col-sm-6">
                 <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
                     <div class="overflow-hidden">
-                        <img src="https://placehold.co/400x300" class="card-img-top img-fluid product-img"
-                            alt="{{ $p->nama }}">
+                        <img src={{ asset('storage/' . ($p->mockup->first()->file_path ?? 'placeholder.png')) }}
+                            class="card-img-top img-fluid product-img" alt="{{ $p->nama }}">
                     </div>
 
                     <div class="card-body d-flex flex-column text-center">
