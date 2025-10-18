@@ -255,10 +255,10 @@
                         <a class="nav-link {{ request()->routeIs('tentang') ? 'active' : '' }}"
                             href="{{ route('tentang') }}">Tentang</a>
                     </li>
-                    <li class="nav-item">
+                    {{-- <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('chat.index') ? 'active' : '' }}"
                             href="{{ route('chat.index') }}">Chat</a>
-                    </li>
+                    </li> --}}
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('kontak') ? 'active' : '' }}"
                             href="{{ route('kontak') }}">Kontak</a>
@@ -308,8 +308,13 @@
     </main>
 
     @if (Auth::check() && Auth::user()->role === 'customer')
-        @include('components.chat-widget')
+        @php
+            $auth = Auth::user();
+            $admin = \App\Models\User::where('role', 'admin')->first();
+        @endphp
+        @include('components.chat-widget', ['auth' => $auth, 'admin' => $admin])
     @endif
+
 
     <!-- Footer -->
     <footer class="py-5 mt-5">
