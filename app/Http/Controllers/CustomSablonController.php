@@ -24,7 +24,7 @@ class CustomSablonController extends Controller
         Storage::disk('public')->put('sablon/preview/' . $imageName, base64_decode($image));
 
         CustomSablon::create([
-            'pesanan_item_id' => 1,
+            'pesanan_item_id' => null,
             'mockup_id' => $request->mockup_id,
             'file_path' => 'sablon/preview/' . $imageName,
             'preview_file' => 'sablon/preview/' . $imageName,
