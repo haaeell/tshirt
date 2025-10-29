@@ -203,7 +203,7 @@
         <div class="container text-center">
             <h2 class="fw-semibold mb-3">Hubungi Kami</h2>
             <p class="text-muted">📞 +62 812-3456-7890 | 📧 toko8@gmail.com</p>
-            <p>📍 Jl. Merdeka No. 88, Jakarta</p>
+            <p>📍 Jl. Kauman No 32 A, Ngupasan , Gondomanan, Yogyakarta</p>
         </div>
     </section>
 

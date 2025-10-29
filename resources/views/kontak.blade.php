@@ -12,7 +12,7 @@
             <div class="col-md-6">
                 <div class="p-4 border rounded-4 shadow-sm bg-white">
                     <h5 class="fw-semibold mb-3">Informasi Kontak</h5>
-                    <p>📍 Jl. Merdeka No. 88, Jakarta, Indonesia</p>
+                    <p>📍 Jl. Kauman No 32 A, Ngupasan, Gondomanan, Yogyakarta</p>
                     <p>📞 +62 812-3456-7890</p>
                     <p>📧 toko8@gmail.com</p>
                     <p>🕘 Senin - Sabtu, 09.00 - 18.00</p>

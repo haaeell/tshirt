@@ -317,28 +317,39 @@
 
 
     <!-- Footer -->
-    <footer class="py-5 mt-5">
-        <div class="container">
-            <div class="row gy-4 align-items-center">
-                <div class="col-md-6">
-                    <h5>Alamat Kami</h5>
-                    <p>📍 Jl. Merdeka No. 88, Jakarta, Indonesia</p>
-                    <p>📞 +62 812-3456-7890</p>
-                    <p>📧 toko8@gmail.com</p>
-                    <p class="mt-3">Jam Operasional: <br> Senin - Sabtu, 09.00 - 18.00</p>
-                </div>
-                <div class="col-md-6 text-center">
-                    <h5>Map Lokasi</h5>
-                    <img src="https://placehold.co/600x400?text=Lokasi+Toko" class="img-fluid shadow-sm" alt="Map">
-                </div>
+  <footer class="py-5 mt-5">
+    <div class="container">
+        <div class="row gy-4 align-items-center">
+            <div class="col-md-6">
+                <h5>Alamat Kami</h5>
+                <p>📍 Titik 0 Kilometer, Yogyakarta, Indonesia</p>
+                <p>📞 +62 812-3456-7890</p>
+                <p>📧 toko8@gmail.com</p>
+                <p class="mt-3">Jam Operasional: <br> Senin - Sabtu, 09.00 - 18.00</p>
             </div>
-
-            <hr class="my-4">
-            <div class="text-center small text-muted">
-                © {{ date('Y') }} Toko Delapan. All rights reserved.
+            <div class="col-md-6 text-center">
+                <h5>Map Lokasi</h5>
+                <div class="ratio ratio-16x9 shadow-sm rounded overflow-hidden">
+                    <iframe 
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3952.914502725733!2d110.36458547496226!3d-7.801389792221993!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a5786bbdf9cb3%3A0xf84532b1a4eece93!2sTitik%200%20Kilometer%20Yogyakarta!5e0!3m2!1sid!2sid!4v1730123456789!5m2!1sid!2sid" 
+                        width="100%" 
+                        height="350" 
+                        style="border:0;" 
+                        allowfullscreen="" 
+                        loading="lazy" 
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
             </div>
         </div>
-    </footer>
+
+        <hr class="my-4">
+        <div class="text-center small text-muted">
+            © {{ date('Y') }} Toko Delapan. All rights reserved.
+        </div>
+    </div>
+</footer>
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
