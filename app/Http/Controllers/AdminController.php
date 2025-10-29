@@ -57,4 +57,23 @@ class AdminController extends Controller
         $user->delete();
         return response()->json(['success' => true]);
     }
+
+    public function customers()
+    {
+        $customers = User::where('role', 'customer')->latest()->get();
+        return view('admin.customers.index', compact('customers'));
+    }
+
+    public function showCustomer($id)
+    {
+        $customer = User::findOrFail($id);
+        return response()->json($customer);
+    }
+
+    public function destroyCustomer($id)
+    {
+        $customer = User::findOrFail($id);
+        $customer->delete();
+        return response()->json(['success' => true]);
+    }
 }

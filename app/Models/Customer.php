@@ -9,7 +9,6 @@ class Customer extends Model
 {
     use HasFactory;
 
-    // tambahkan ini biar pakai tabel 'customers'
     protected $table = 'customers';
 
     protected $fillable = [

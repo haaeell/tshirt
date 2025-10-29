@@ -30,6 +30,10 @@ Route::prefix('admin')->middleware('auth')->group(function () {
     Route::post('users', [AdminController::class, 'store'])->name('admin.users.store');
     Route::put('users/{user}', [AdminController::class, 'update'])->name('admin.users.update');
     Route::delete('users/{user}', [AdminController::class, 'destroy'])->name('admin.users.destroy');
+    Route::get('customers', [AdminController::class, 'customers'])->name('admin.customers.index');
+    Route::get('customers/{id}', [AdminController::class, 'showCustomer'])->name('admin.customers.show');
+    Route::delete('customers/{id}', [AdminController::class, 'destroyCustomer'])->name('admin.customers.destroy');
+
 
     Route::resource('produk', ProdukController::class)->except(['show']);
     Route::resource('materials', MaterialController::class)->except(['show']);
