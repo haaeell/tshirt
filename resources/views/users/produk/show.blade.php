@@ -241,7 +241,15 @@
             inset: 0;
             z-index: 2;
             pointer-events: none;
+            background-color: var(--mockup-color, #ccc);
+            -webkit-mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            -webkit-mask-size: contain;
+            mask-repeat: no-repeat;
+            mask-position: center;
+            mask-size: contain;
         }
+
 
         .mockup-img {
             position: absolute;

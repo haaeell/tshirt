@@ -120,7 +120,11 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('keranjang_item_id')->constrained('keranjang_item')->cascadeOnDelete();
             $table->string('ukuran');
+<<<<<<< HEAD
             $table->string('lengan', 20);
+=======
+            $table->string('lengan', 20)->nullable();
+>>>>>>> f4e151c8d22d41dd6dfef8a68a1f29971610d84e
             $table->integer('qty')->default(1);
             $table->decimal('harga_satuan', 12, 2);
             $table->decimal('subtotal', 12, 2);
@@ -166,7 +170,7 @@ return new class extends Migration {
 
         Schema::create('custom_sablon', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('pesanan_item_id')->constrained('pesanan_item')->cascadeOnDelete();
+            $table->foreignId('pesanan_item_id')->nullable()->constrained('pesanan_item')->cascadeOnDelete();
             $table->foreignId('mockup_id')->constrained('mockup')->cascadeOnDelete();
             $table->string('file_path');
             $table->string('preview_file');
@@ -196,7 +200,7 @@ return new class extends Migration {
         // === ULASAN ===
         Schema::create('ulasan_produk', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('pesanan_item_id')->constrained('pesanan_item')->cascadeOnDelete();
+            $table->foreignId('pesanan_item_id')->nullable()->constrained('pesanan_item')->cascadeOnDelete();
             $table->foreignId('produk_id')->constrained('produk')->restrictOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->unsignedTinyInteger('rating');

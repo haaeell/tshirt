@@ -66,7 +66,11 @@ class ProdukVarianController extends Controller
             'tambahan_harga' => 'nullable|numeric|min:0',
         ]);
 
-        Bahan::create($request->only('produk_id', 'nama', 'tambahan_harga'));
+        Bahan::create([
+            'produk_id' => $request->produk_id,
+            'nama' => $request->nama,
+            'tambahan_harga' => $request->tambahan_harga ?? 0,
+        ]);
         return back()->with('success', 'Bahan berhasil ditambahkan');
     }
 
@@ -202,7 +206,10 @@ class ProdukVarianController extends Controller
             'tambahan_harga' => 'nullable|numeric|min:0',
         ]);
 
-        Ukuran::create($request->only('nama', 'tambahan_harga'));
+        Ukuran::create([
+            'nama' => $request->nama,
+            'tambahan_harga' => $request->tambahan_harga ?? 0,
+        ]);
         return redirect()->back()->with('success', 'Ukuran berhasil ditambahkan');
     }
 

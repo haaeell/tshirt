@@ -141,7 +141,7 @@
         <div class="container">
             <h1 class="fw-bold">TOKO DELAPAN</h1>
             <p class="lead">Layanan sablon kaos, printing, dan produk kreatif lainnya. Cepat, murah, dan berkualitas!</p>
-            <a href="#" class="btn btn-light btn-lg px-4 shadow-sm">Booking Sekarang</a>
+            <a href="/produk" class="btn btn-light btn-lg px-4 shadow-sm">Booking Sekarang</a>
         </div>
     </section>
 
@@ -174,8 +174,8 @@
                     <div class="col-md-3 col-sm-6">
                         <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden">
                             <div class="overflow-hidden">
-                                <img src="https://placehold.co/400x300" class="card-img-top img-fluid product-img"
-                                    alt="{{ $p->nama }}">
+                                <img src="{{ asset('storage/' . ($p->mockup->first()->file_path ?? 'https://placehold.co/400x300')) }}"
+                                    class="card-img-top img-fluid product-img" alt="{{ $p->nama }}">
                             </div>
 
                             <div class="card-body d-flex flex-column text-center">
