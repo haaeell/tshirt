@@ -309,7 +309,7 @@
             document.querySelector('.d-flex.justify-content-between.align-items-center.mb-3')
                 .insertAdjacentElement('beforebegin', tambahanInfoEl);
 
-            function updateTambahanInfo(bahanHarga, bahanNama, sablonCost, sablonBreakdown, detail) {
+            function updateTambahanInfo(bahanHarga, bahanNama, sablonTotal, sablonBreakdown, detail) {
                 let html = `
     <strong>Rincian Biaya Tambahan:</strong>
     <div class="mt-2">
@@ -364,20 +364,37 @@
             <tr><td colspan="3" class="pt-2 pb-0 fw-semibold">Custom Sablon:</td></tr>
         `;
                     sablonBreakdown.forEach((item, i) => {
+                        const totalItem = item.cost * totalQty;
+
                         html += `
-                <tr>
-                    <td></td>
-                    <td>${i + 1}. ${item.type} ${item.sizeLabel}</td>
-                    <td class="text-end text-primary">+Rp ${item.cost.toLocaleString('id-ID')}</td>
-                </tr>`;
+        <tr>
+            <td></td>
+            <td>
+                ${i + 1}. ${item.type} ${item.sizeLabel}
+                <br>
+                <small class="text-muted">
+                    Rp ${item.cost.toLocaleString('id-ID')}
+                    × ${totalQty} pcs
+                    = Rp ${totalItem.toLocaleString('id-ID')}
+                </small>
+            </td>
+            <td class="text-end text-primary">
+                +Rp ${totalItem.toLocaleString('id-ID')}
+            </td>
+        </tr>
+    `;
                     });
+
                     html += `
             <tr>
                 <td></td>
-                <td class="fw-semibold">Subtotal sablon (${sablonBreakdown.length} item)</td>
-                <td class="text-end text-primary fw-semibold">+Rp ${sablonCost.toLocaleString('id-ID')}</td>
+               <td class="fw-semibold">Subtotal sablon (${totalQty} pcs)</td>
+<td class="text-end text-primary fw-semibold">
+    +Rp ${sablonTotal.toLocaleString('id-ID')}
+</td>
+
             </tr>`;
-                    totalTambahan += sablonCost;
+                    totalTambahan += sablonTotal;
                 }
 
                 html += `
@@ -391,6 +408,45 @@
     `;
                 tambahanInfoEl.innerHTML = html;
             }
+
+
+            function getSablonMetaByText(size) {
+                if (size > 40) {
+                    return {
+                        label: '(besar)',
+                        cost: 10000
+                    };
+                }
+                return {
+                    label: '(kecil)',
+                    cost: 5000
+                };
+            }
+
+            function getSablonMetaByImage(w, h, canvas) {
+                const maxPrintWidthCm = 30;
+                const maxPrintHeightCm = 40;
+
+                const cmPerPixelX = maxPrintWidthCm / canvas.width;
+                const cmPerPixelY = maxPrintHeightCm / canvas.height;
+
+                const widthCm = w * cmPerPixelX;
+                const heightCm = h * cmPerPixelY;
+
+                const areaCm = widthCm * heightCm;
+
+                if (areaCm > 100) { // 15 × 15 cm
+                    return {
+                        label: '(besar)',
+                        cost: 10000
+                    };
+                }
+                return {
+                    label: '(kecil)',
+                    cost: 5000
+                };
+            }
+
 
             const warnaHidden = document.getElementById('warnaHidden');
             const bahanHidden = document.getElementById('bahanHidden');
@@ -486,15 +542,8 @@
                 if (!text) return Swal.fire('Tulis dulu teksnya!', '', 'warning');
 
                 const size = 32;
-                const cost = size > 50 ? 10000 : 5000;
                 const sizeLabel = size > 50 ? '(besar)' : '(kecil)';
-                sablonCost += cost;
-                sablonBreakdown.push({
-                    type: 'Teks',
-                    cost,
-                    sizeLabel
-                });
-
+                const cost = size > 50 ? 10000 : 5000;
                 uploadedTexts.push({
                     text,
                     font,
@@ -504,13 +553,17 @@
                     color: '#ffffff',
                     bold: false,
                     italic: false,
-                    align: 'center',
-                    cost
+                    align: 'center'
+                });
+
+                sablonBreakdown.push({
+                    type: 'Teks',
+                    cost,
+                    sizeLabel
                 });
                 activeTextIndex = uploadedTexts.length - 1;
                 document.getElementById('textTools').classList.remove('d-none');
 
-                updateSablonInfo();
                 redrawCanvas();
             });
 
@@ -532,24 +585,21 @@
                     const threshold = (canvas.width * canvas.height) / 4;
                     const cost = area > threshold ? 10000 : 5000;
                     const sizeLabel = area > threshold ? '(besar)' : '(kecil)';
-                    sablonCost += cost;
-                    sablonBreakdown.push({
-                        type: 'Gambar',
-                        cost,
-                        sizeLabel
-                    });
-
                     uploadedImages.push({
                         img,
                         x,
                         y,
                         w,
-                        h,
-                        cost
+                        h
+                    });
+
+                    sablonBreakdown.push({
+                        type: 'Gambar',
+                        cost,
+                        sizeLabel
                     });
                     activeImageIndex = uploadedImages.length - 1;
 
-                    updateSablonInfo();
                     redrawCanvas();
                 };
                 img.src = URL.createObjectURL(file);
@@ -672,7 +722,9 @@
                     imgObj.w = Math.max(30, Math.min(canvas.width, imgObj.w * scale));
                     imgObj.h = Math.max(30, Math.min(canvas.height, imgObj.h * scale));
                     redrawCanvas();
+                    updateTotal();
                     return;
+
                 }
 
                 if (activeTextIndex >= 0) {
@@ -680,6 +732,7 @@
                     const scale = e.deltaY < 0 ? 1.1 : 0.9;
                     txt.size = Math.max(10, Math.min(200, txt.size * scale));
                     redrawCanvas();
+                    updateTotal();
                 }
             });
 
@@ -792,8 +845,6 @@
                 warnaHidden.value = first.dataset.nama || (first.dataset.hex || '#c9c9c9');
             }
 
-
-            let sablonCost = 0;
             let sablonBreakdown = [];
 
             const sablonInfoEl = document.createElement('div');
@@ -828,16 +879,42 @@
                 const totalQty = detail.reduce((sum, d) => sum + d.qty, 0);
                 const bahanTotal = bahanHarga * totalQty;
 
-                total += bahanTotal + sablonCost;
+                sablonBreakdown = [];
 
-                updateTambahanInfo(bahanHarga, bahanNama, sablonCost, sablonBreakdown, detail);
+                // TEKS
+                uploadedTexts.forEach(txt => {
+                    const meta = getSablonMetaByText(txt.size);
+                    sablonBreakdown.push({
+                        type: 'Teks',
+                        sizeLabel: meta.label,
+                        cost: meta.cost
+                    });
+                });
+
+                // GAMBAR
+                uploadedImages.forEach(img => {
+                    const meta = getSablonMetaByImage(img.w, img.h, canvas);
+                    sablonBreakdown.push({
+                        type: 'Gambar',
+                        sizeLabel: meta.label,
+                        cost: meta.cost
+                    });
+                });
+                let sablonTotal = 0;
+                sablonBreakdown.forEach(item => {
+                    sablonTotal += item.cost * totalQty;
+                });
+
+                total += bahanTotal + sablonTotal;
+
+                updateTambahanInfo(bahanHarga, bahanNama, sablonTotal, sablonBreakdown, detail);
 
                 totalHargaEl.textContent = 'Rp ' + total.toLocaleString('id-ID');
                 detailJson.value = JSON.stringify(detail);
                 bahanHidden.value = bahanSelect.value;
                 lenganHidden.value = lastLengan;
 
-                document.getElementById('biayaTambahanTotal').value = (bahanTotal + sablonCost).toFixed(0);
+                document.getElementById('biayaTambahanTotal').value = (bahanTotal + sablonTotal).toFixed(0);
                 document.getElementById('rincianTambahan').value = JSON.stringify({
                     bahan: {
                         nama: bahanNama,
@@ -904,6 +981,7 @@
                 if (activeTextIndex >= 0) {
                     uploadedTexts[activeTextIndex].size = parseInt(textSize.value);
                     redrawCanvas();
+                    updateTotal();
                 }
             });
 

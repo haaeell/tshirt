@@ -12,9 +12,6 @@ use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
 {
-    /**
-     * Tampilkan isi keranjang user.
-     */
     public function index()
     {
         $keranjang = Keranjang::with(['items.details', 'items.produk'])
@@ -32,6 +29,7 @@ class CartController extends Controller
         ]);
 
         DB::beginTransaction();
+
         try {
             $userId = Auth::id();
             $keranjang = Keranjang::firstOrCreate(['user_id' => $userId]);
@@ -39,9 +37,40 @@ class CartController extends Controller
             $details = json_decode($request->detail_json, true);
 
             $subtotalDasar = collect($details)->sum('subtotal');
-
             $biayaTambahan = (float) ($request->biaya_tambahan_total ?? 0);
             $subtotalBaru = $subtotalDasar + $biayaTambahan;
+
+            $totalQty = collect($details)->sum('qty');
+
+            $rincianTambahan = json_decode($request->rincian_tambahan ?? '{}', true);
+
+            $bahanTotal = (int) ($rincianTambahan['bahan']['total'] ?? 0);
+
+            $sablonFinal = [];
+            $sablonTotal = 0;
+
+            if (!empty($rincianTambahan['sablon'])) {
+                foreach ($rincianTambahan['sablon'] as $s) {
+                    $cost = (int) ($s['cost'] ?? 0);
+                    $subtotal = $cost * $totalQty;
+                    $sablonTotal += $subtotal;
+
+                    $sablonFinal[] = [
+                        'type' => $s['type'] ?? null,
+                        'sizeLabel' => $s['sizeLabel'] ?? null,
+                        'cost' => $cost,
+                        'qty' => $totalQty,
+                        'subtotal' => $subtotal,
+                    ];
+                }
+            }
+
+            $rincianTambahanFinal = [
+                'qty_total' => $totalQty,
+                'total_tambahan' => $bahanTotal + $sablonTotal,
+                'bahan' => $rincianTambahan['bahan'] ?? null,
+                'sablon' => $sablonFinal,
+            ];
 
             $item = KeranjangItem::where('keranjang_id', $keranjang->id)
                 ->where('produk_id', $produk->id)
@@ -51,15 +80,8 @@ class CartController extends Controller
 
             if ($item) {
                 $item->subtotal += $subtotalBaru;
-
-                if ($request->filled('custom_sablon_data')) {
-                    $item->custom_sablon_url = $request->custom_sablon_data;
-                }
-
-                if ($request->filled('rincian_tambahan')) {
-                    $item->rincian_tambahan = $request->rincian_tambahan;
-                }
-
+                $item->custom_sablon_url = $request->custom_sablon_data ?? $item->custom_sablon_url;
+                $item->rincian_tambahan = json_encode($rincianTambahanFinal);
                 $item->save();
             } else {
                 $item = KeranjangItem::create([
@@ -69,7 +91,7 @@ class CartController extends Controller
                     'bahan' => $request->bahan,
                     'subtotal' => $subtotalBaru,
                     'custom_sablon_url' => $request->custom_sablon_data,
-                    'rincian_tambahan' => $request->rincian_tambahan ?? null,
+                    'rincian_tambahan' => json_encode($rincianTambahanFinal),
                 ]);
             }
 
@@ -99,14 +121,10 @@ class CartController extends Controller
             return redirect()->route('users.cart.index')->with('success', 'Produk berhasil ditambahkan ke keranjang!');
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal menambah ke keranjang: ' . $e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
-
-    /**
-     * Update item di keranjang (jumlah atau varian).
-     */
     public function update(Request $request, $id)
     {
         $item = KeranjangItem::whereHas('keranjang', function ($q) {
@@ -122,9 +140,6 @@ class CartController extends Controller
         return back()->with('success', 'Keranjang diperbarui.');
     }
 
-    /**
-     * Hapus item dari keranjang.
-     */
     public function destroy($id)
     {
         $item = KeranjangItem::whereHas('keranjang', function ($q) {

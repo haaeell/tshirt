@@ -121,17 +121,24 @@
                                                         @endif
 
                                                         @if (!empty($tambahan['sablon']))
-                                                            <li>Sablon:</li>
-                                                            <ul class="mb-0 ps-3">
-                                                                @foreach ($tambahan['sablon'] as $s)
-                                                                    <li>
-                                                                        {{ $s['type'] ?? '-' }}
-                                                                        {{ $s['sizeLabel'] ?? '' }}
-                                                                        (+Rp
-                                                                        {{ number_format($s['cost'] ?? 0, 0, ',', '.') }})
-                                                                    </li>
-                                                                @endforeach
-                                                            </ul>
+                                                            <li class="mt-1">
+                                                                <strong>Sablon:</strong>
+                                                                <ul class="mb-0 ps-3">
+                                                                    @foreach ($tambahan['sablon'] as $s)
+                                                                        <li>
+                                                                            {{ $s['type'] }} {{ $s['sizeLabel'] }}
+                                                                            <br>
+                                                                            <small class="text-muted">
+                                                                                Rp
+                                                                                {{ number_format($s['cost'], 0, ',', '.') }}
+                                                                                × {{ $s['qty'] }} pcs
+                                                                                = Rp
+                                                                                {{ number_format($s['subtotal'], 0, ',', '.') }}
+                                                                            </small>
+                                                                        </li>
+                                                                    @endforeach
+                                                                </ul>
+                                                            </li>
                                                         @endif
                                                     </ul>
 
