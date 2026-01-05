@@ -52,8 +52,13 @@
                                     <td>
                                         <div class="text-warning">
                                             @for ($i = 1; $i <= 5; $i++)
-                                                <i class="fas fa-star{{ $i <= $u->rating ? '' : '-o' }}"></i>
+                                                @if ($i <= $u->rating)
+                                                    <i class="fas fa-star text-warning"></i>
+                                                @else
+                                                    <i class="far fa-star text-warning"></i> {{-- outline star --}}
+                                                @endif
                                             @endfor
+
                                         </div>
                                     </td>
                                     <td>{{ $u->komentar ?: '-' }}</td>

@@ -135,8 +135,12 @@
                                     </form>
                                 </div>
                             @else
-                                <p class="text-success fw-semibold mb-0 mt-2">
-                                    <i class="fas fa-check-circle me-1"></i> Pembayaran disetujui
+                                <p class=" fw-semibold mb-0 mt-2">
+                                    @if ($pesanan->status == 'dibayar')
+                                        <i class="fas fa-check-circle me-1 text-success"></i> Pembayaran disetujui
+                                    @else
+                                        <i class="fas fa-times-circle me-1 text-danger"></i> Pembayaran ditolak
+                                    @endif
                                 </p>
                             @endif
                         @else
