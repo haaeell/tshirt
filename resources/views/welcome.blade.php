@@ -199,6 +199,59 @@
         </div>
     </section>
 
+    <section id="voucher" class="py-5 bg-light">
+        <div class="container text-center">
+            <h2 class="fw-semibold mb-3">Voucher Tersedia</h2>
+            <p class="text-muted mb-5">Gunakan voucher untuk mendapatkan potongan harga menarik!</p>
+
+            <div class="row g-4 justify-content-center">
+                @php
+                    use App\Models\Voucher;
+                    $vouchers = Voucher::where('aktif', 1)
+                        ->whereDate('mulai', '<=', now())
+                        ->whereDate('berakhir', '>=', now())
+                        ->get();
+                @endphp
+
+                @forelse ($vouchers as $v)
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card border-0 shadow-sm rounded-4 h-100 hover-scale">
+                            <div class="card-body d-flex flex-column justify-content-between">
+                                <div>
+                                    <h5 class="fw-bold mb-2 text-primary">{{ $v->kode }}</h5>
+                                    <p class="mb-2 small text-muted">
+                                        @if ($v->tipe === 'percent')
+                                            Potongan: <strong>{{ $v->nilai }}%</strong>
+                                            @if ($v->maks_diskon)
+                                                (maks Rp {{ number_format($v->maks_diskon, 0, ',', '.') }})
+                                            @endif
+                                        @else
+                                            Potongan: <strong>Rp {{ number_format($v->nilai, 0, ',', '.') }}</strong>
+                                        @endif
+                                    </p>
+                                    <p class="mb-1 small text-muted">
+                                        Min belanja: <strong>Rp {{ number_format($v->min_belanja, 0, ',', '.') }}</strong>
+                                    </p>
+                                    <p class="mb-3 small text-muted">
+                                        Berlaku: {{ \Carbon\Carbon::parse($v->mulai)->format('d M Y') }}
+                                        - {{ \Carbon\Carbon::parse($v->berakhir)->format('d M Y') }}
+                                    </p>
+                                </div>
+
+                                <span class="badge bg-success align-self-start p-2">
+                                    Sisa: {{ max(0, $v->limit_pemakaian - $v->jumlah_dipakai) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-muted">Belum ada voucher tersedia saat ini.</div>
+                @endforelse
+            </div>
+        </div>
+    </section>
+
+
     <section id="kontak" class="py-5">
         <div class="container text-center">
             <h2 class="fw-semibold mb-3">Hubungi Kami</h2>

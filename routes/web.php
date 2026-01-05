@@ -11,6 +11,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PesananController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\MaterialController;
+use App\Http\Controllers\OngkirController;
 use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\ProdukVarianController;
 use App\Http\Controllers\VoucherController;
@@ -127,4 +128,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/chat/typing', [ChatController::class, 'typing'])->name('chat.typing');
     Route::post('/chat/stop-typing', [ChatController::class, 'stopTyping'])->name('chat.stopTyping');
     Route::post('/chat/read/{user}', [ChatController::class, 'markAsRead'])->name('chat.read');
+
+    Route::prefix('ongkir')->group(function () {
+
+        // lokasi
+        Route::get('/provinces', [OngkirController::class, 'provinces']);
+        Route::get('/cities/{provinceId}', [OngkirController::class, 'cities']);
+        Route::get('/districts/{cityId}', [OngkirController::class, 'districts']);
+        Route::get('/subdistricts/{districtId}', [OngkirController::class, 'subdistricts']);
+
+        // ongkir
+        Route::post('/cost', [OngkirController::class, 'cost']);
+    });
 });

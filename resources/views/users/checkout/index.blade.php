@@ -34,18 +34,44 @@
                                 <textarea name="alamat" class="form-control form-control-sm rounded-3" rows="3" required></textarea>
                             </div>
                             <div class="row g-2">
-                                <div class="col-md-4">
-                                    <input type="text" name="kota" class="form-control form-control-sm rounded-3"
-                                        placeholder="Kota" required>
+                                <div class="col-md-6">
+                                    <select id="province" name="province_id" class="form-select form-select-sm">
+                                        <option value="">Pilih Provinsi</option>
+                                    </select>
+
                                 </div>
-                                <div class="col-md-4">
-                                    <input type="text" name="provinsi" class="form-control form-control-sm rounded-3"
-                                        placeholder="Provinsi" required>
+                                <div class="col-md-6">
+                                    <select id="city" name="city_id" class="form-select form-select-sm">
+                                        <option value="">Pilih Kota</option>
+                                    </select>
                                 </div>
-                                <div class="col-md-4">
-                                    <input type="text" name="kode_pos" class="form-control form-control-sm rounded-3"
-                                        placeholder="Kode Pos">
+                                <div class="col-md-6 mt-2">
+                                    <select id="district" class="form-select form-select-sm">
+                                        <option value="">Pilih Kecamatan</option>
+                                    </select>
                                 </div>
+
+                                <div class="col-md-6 mt-2">
+                                    <select id="subdistrict" name="subdistrict_id" class="form-select form-select-sm">
+                                        <option value="">Pilih Kelurahan</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 mt-2">
+                                    <select id="courier" class="form-select form-select-sm">
+                                        <option value="">Pilih Kurir</option>
+                                        <option value="jne">JNE</option>
+                                        <option value="pos">POS</option>
+                                        <option value="tiki">TIKI</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 mt-2">
+                                    <select id="service" class="form-select form-select-sm">
+                                        <option value="">Pilih Layanan</option>
+                                    </select>
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -164,7 +190,7 @@
 
                             <!-- Input Voucher -->
                             <div class="input-group input-group-sm mb-3">
-                                <input type="text" name="voucher_kode" class="form-control rounded-start-3"
+                                <input type="text" class="form-control rounded-start-3"
                                     placeholder="Masukkan kode voucher">
                                 <button type="button" id="btnVoucher" class="btn btn-outline-primary rounded-end-3">
                                     <i class="fas fa-ticket-alt me-1"></i> Gunakan
@@ -176,11 +202,13 @@
                                 <span>Subtotal</span>
                                 <strong>Rp {{ number_format($keranjang->items->sum('subtotal'), 0, ',', '.') }}</strong>
                             </div>
-
                             <div class="d-flex justify-content-between small mb-2">
                                 <span>Ongkir</span>
-                                <strong>Rp 20.000</strong>
+                                <strong id="ongkir-text">Rp 0</strong>
                             </div>
+
+                            <input type="hidden" name="ongkir" id="ongkir" value="0">
+
 
                             <div class="d-flex justify-content-between small mb-2 text-success d-none" id="row-diskon">
                                 <span>Diskon Voucher</span>
@@ -249,13 +277,116 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             $(function() {
-                const $voucherInput = $('input[name="voucher_kode"]');
+                const $voucherInput = $('.input-group input[type="text"]');
+                const ORIGIN_SUBDISTRICT_ID = 31511;
                 const $voucherBtn = $('#btnVoucher');
                 const $diskonRow = $('#row-diskon');
                 const $diskonValue = $('#diskon-value');
                 const $totalValue = $('#total-value');
                 const subtotal = {{ $keranjang->items->sum('subtotal') }};
                 const ongkir = 20000;
+
+
+                // === Load provinsi
+                $.get('/ongkir/provinces', function(data) {
+                    $('#province').html('<option value="">Pilih Provinsi</option>');
+                    data.forEach(p => {
+                        $('#province').append(
+                            `<option value="${p.name}" data-id="${p.id}">${p.name}</option>`
+                        );
+                    });
+                });
+
+                // === Kota
+                $('#province').on('change', function() {
+                    const provinceId = $(this).find(':selected').data('id');
+                    $('#city').html('<option value="">Pilih Kota</option>');
+                    if (!provinceId) return;
+
+                    $.get(`/ongkir/cities/${provinceId}`, function(data) {
+                        data.forEach(c => {
+                            $('#city').append(
+                                `<option value="${c.name}" data-id="${c.id}">${c.name}</option>`
+                            );
+                        });
+                    });
+                });
+
+                // === Kecamatan
+                $('#city').on('change', function() {
+                    const cityId = $(this).find(':selected').data('id');
+                    $('#district').html('<option value="">Pilih Kecamatan</option>');
+                    $('#subdistrict').html('<option value="">Pilih Kelurahan</option>');
+                    if (!cityId) return;
+
+                    $.get(`/ongkir/districts/${cityId}`, function(data) {
+                        data.forEach(d => {
+                            $('#district').append(
+                                `<option value="${d.name}" data-id="${d.id}">${d.name}</option>`
+                            );
+                        });
+                    });
+                });
+
+                // === Kelurahan
+                $('#district').on('change', function() {
+                    const districtId = $(this).find(':selected').data('id');
+                    $('#subdistrict').html('<option value="">Pilih Kelurahan</option>');
+                    if (!districtId) return;
+
+                    $.get(`/ongkir/subdistricts/${districtId}`, function(data) {
+                        data.forEach(s => {
+                            $('#subdistrict').append(
+                                `<option value="${s.name}" data-id="${s.id}">${s.name}</option>`
+                            );
+                        });
+                    });
+                });
+
+                // === Ongkir
+                $('#courier').on('change', function() {
+                    const courier = $(this).val();
+                    const destinationId = $('#subdistrict option:selected').data('id');
+
+                    if (!destinationId) {
+                        alert('Pilih kelurahan dulu');
+                        return;
+                    }
+
+                    $.post('/ongkir/cost', {
+                        _token: '{{ csrf_token() }}',
+                        origin: ORIGIN_SUBDISTRICT_ID,
+                        destination: destinationId,
+                        weight: 1000,
+                        courier: courier
+                    }, function(services) {
+                        console.log('Data layanan:', services); // log untuk cek
+
+                        $('#service').html('<option value="">Pilih Layanan</option>');
+                        services.forEach(s => {
+                            $('#service').append(`
+                    <option value="${s.cost}">
+                        ${s.service} - Rp ${s.cost.toLocaleString('id-ID')}
+                    </option>
+                `);
+                        });
+                    });
+                });
+
+                // === Pilih layanan
+                $('#service').on('change', function() {
+                    const cost = parseInt($(this).val());
+                    $('#ongkir').val(cost);
+                    $('#ongkir-text').text('Rp ' + cost.toLocaleString('id-ID'));
+                    updateTotal();
+                });
+
+
+                function updateTotal(diskon = 0) {
+                    const ongkirVal = parseInt($('#ongkir').val() || 0);
+                    const total = subtotal + ongkirVal - diskon;
+                    $('#total-value').text("Rp " + total.toLocaleString('id-ID'));
+                }
 
                 // === APPLY VOUCHER ===
                 $voucherBtn.on('click', function() {
@@ -280,7 +411,7 @@
                         success: function(res) {
                             if (res.success) {
                                 const diskon = res.diskon;
-                                const total = subtotal + ongkir - diskon;
+                                updateTotal(diskon);
 
                                 $diskonRow.removeClass('d-none');
                                 $diskonValue.text("- Rp " + diskon.toLocaleString('id-ID'));
@@ -341,6 +472,17 @@
                         cancelButtonText: 'Batal'
                     }).then(result => {
                         if (result.isConfirmed) {
+                            $('#checkoutForm').append(
+                                `<input type="hidden" name="provinsi" value="${$('#province').val()}">`
+                            );
+                            $('#checkoutForm').append(
+                                `<input type="hidden" name="kota" value="${$('#city').val()}">`);
+                            $('#checkoutForm').append(
+                                `<input type="hidden" name="kecamatan" value="${$('#district').val()}">`
+                            );
+                            $('#checkoutForm').append(
+                                `<input type="hidden" name="kelurahan" value="${$('#subdistrict').val()}">`
+                            );
                             e.target.submit();
                         }
                     });

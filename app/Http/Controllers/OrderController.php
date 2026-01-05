@@ -62,7 +62,9 @@ class OrderController extends Controller
             'alamat' => $request->alamat,
             'kota' => $request->kota,
             'provinsi' => $request->provinsi,
-            'kode_pos' => $request->kode_pos,
+            'kecamatan' => $request->kecamatan,
+            'kelurahan' => $request->kelurahan,
+            'kode_pos' => 2670,
         ]);
 
         foreach ($keranjang->items as $item) {

@@ -170,8 +170,11 @@
                         'diproses' => 'Pesanan Diproses',
                         'dikirim' => 'Sedang Dikirim',
                         'selesai' => 'Selesai',
-                        'batal' => 'Dibatalkan',
                     ];
+
+                    if ($pesanan->status === 'batal') {
+                        $statuses['batal'] = 'Dibatalkan';
+                    }
                     $icons = [
                         'pending' => 'fa-clock',
                         'dibayar' => 'fa-hourglass-half',

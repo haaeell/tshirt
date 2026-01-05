@@ -37,7 +37,7 @@ class ChatController extends Controller
     {
         $authId = Auth::id();
         $messages = Chat::between($authId, $user->id)
-            ->orderBy('created_at')
+            ->orderBy('created_at', 'desc')
             ->take(200)
             ->get();
 
